@@ -3,7 +3,7 @@ module github.com/openserve/openserve/apps/peer-relay
 go 1.22
 
 require (
-	github.com/go-chi/chi/v5 v5.0.12
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/gorilla/websocket v1.5.1
 	github.com/jackc/pgx/v5 v5.5.5
 	go.uber.org/zap v1.27.0

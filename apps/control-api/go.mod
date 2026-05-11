@@ -7,7 +7,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/jackc/pgx/v5 v5.7.2
 	golang.org/x/crypto v0.36.0
-	golang.org/x/oauth2 v0.24.0 // bumped for security - run go mod tidy
+	golang.org/x/oauth2 v0.24.0
 )
 
 require (

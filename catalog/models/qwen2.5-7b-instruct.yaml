@@ -7,7 +7,7 @@ version: "2.5"
 hfRepo: "Qwen/Qwen2.5-7B-Instruct"
 hfRevision: "d2a0a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7"
 # Placeholder SHA256 - real value computed during weight verification
-weightDigestSha256: "d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5"
+weightDigestSha256: "000000000000000000000000000000000000000000000000000000000000000a"
 license: apache-2.0
 parameterCount: "7B"
 minGPUClass: l4

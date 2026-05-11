@@ -5,10 +5,9 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-COPY apps/gui/package.json ./
+COPY apps/gui/package.json apps/gui/pnpm-lock.yaml ./
 
-# Generate lockfile and install deps (no frozen-lockfile since lock may not exist)
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 
 # Builder stage
 FROM node:20-alpine AS builder

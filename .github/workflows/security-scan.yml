@@ -10,6 +10,7 @@ on:
 permissions:
   security-events: write
   contents: read
+  packages: write
 
 jobs:
   codeql:
@@ -21,58 +22,46 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
+        uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
+        uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+        uses: github/codeql-action/analyze@v3
 
   govulncheck:
     runs-on: ubuntu-22.04
     strategy:
+      fail-fast: false
       matrix:
-        module: [operator, apps/control-api, apps/gateway]
+        include:
+          - module: operator
+            go-version: "1.23"
+          - module: apps/control-api
+            go-version: "1.24"
+          - module: apps/gateway
+            go-version: "1.23"
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Go 1.22
+      - name: Set up Go ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
-          go-version: "1.22"
+          go-version: ${{ matrix.go-version }}
+
+      - name: Tidy module
+        run: go mod tidy
+        working-directory: ${{ matrix.module }}
 
       - name: Install govulncheck
         run: go install golang.org/x/vuln/cmd/govulncheck@latest
 
       - name: Run govulncheck
-        working-directory: ${{ matrix.module }}
         run: govulncheck ./...
-
-  trivy-images:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build-images
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        component: [operator, control-api, gateway, gui]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: ghcr.io/openserve/openserve-${{ matrix.component }}:sha-${{ github.sha }}
-          format: sarif
-          output: trivy-${{ matrix.component }}.sarif
-
-      - name: Upload Trivy results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: trivy-${{ matrix.component }}.sarif
-          category: trivy-${{ matrix.component }}
+        working-directory: ${{ matrix.module }}
 
   build-images:
     runs-on: ubuntu-22.04
@@ -104,4 +93,27 @@ jobs:
           context: .
           file: ${{ steps.dockerfile.outputs.path }}
           push: true
-          tags: ghcr.io/openserve/openserve-${{ matrix.component }}:sha-${{ github.sha }}
+          tags: ghcr.io/${{ github.repository_owner }}/openserve-${{ matrix.component }}:sha-${{ github.sha }}
+
+  trivy-images:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-images
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        component: [operator, control-api, gateway, gui]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/${{ github.repository_owner }}/openserve-${{ matrix.component }}:sha-${{ github.sha }}
+          format: sarif
+          output: trivy-${{ matrix.component }}.sarif
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-${{ matrix.component }}.sarif
+          category: trivy-${{ matrix.component }}

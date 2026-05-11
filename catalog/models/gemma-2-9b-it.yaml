@@ -7,7 +7,7 @@ version: "2"
 hfRepo: "google/gemma-2-9b-it"
 hfRevision: "a8f8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0"
 # Placeholder SHA256 - real value computed during weight verification
-weightDigestSha256: "e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6"
+weightDigestSha256: "0000000000000000000000000000000000000000000000000000000000000002"
 license: gemma
 parameterCount: "9B"
 minGPUClass: l4

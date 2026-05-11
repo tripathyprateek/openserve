@@ -7,7 +7,7 @@ version: "3"
 hfRepo: "meta-llama/Meta-Llama-3-70B-Instruct"
 hfRevision: "f6b640b4a7e5d6c3b2a1f0e9d8c7b6a5f4e3d2c1"
 # Placeholder SHA256 - real value computed during weight verification
-weightDigestSha256: "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3"
+weightDigestSha256: "0000000000000000000000000000000000000000000000000000000000000004"
 license: llama3
 parameterCount: "70B"
 minGPUClass: a100-40g

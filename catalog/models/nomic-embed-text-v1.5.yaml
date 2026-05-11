@@ -6,7 +6,7 @@ modelType: embedding
 embeddingDimensions: 768
 hfRepo: "nomic-ai/nomic-embed-text-v1.5"
 hfRevision: "b0753ae76394dd36bcfb912a46fc192ea54e765a"
-weightDigestSha256: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+weightDigestSha256: "0000000000000000000000000000000000000000000000000000000000000008"
 license: apache-2.0
 parameterCount: "137M"
 minGPUClass: l4

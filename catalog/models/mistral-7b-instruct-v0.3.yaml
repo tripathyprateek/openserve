@@ -7,7 +7,7 @@ version: "0.3"
 hfRepo: "mistralai/Mistral-7B-Instruct-v0.3"
 hfRevision: "39bdc5e3e6c2a2a5f4e3d2c1b0a9f8e7d6c5b4a3"
 # Placeholder SHA256 - real value computed during weight verification
-weightDigestSha256: "c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"
+weightDigestSha256: "0000000000000000000000000000000000000000000000000000000000000006"
 license: mistral
 parameterCount: "7B"
 minGPUClass: l4

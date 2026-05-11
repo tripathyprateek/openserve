@@ -1,0 +1,40 @@
+apiVersion: v2
+name: openserve
+description: >
+  Open-source LLM serving platform — deploy curated open-source models into
+  your own GCP project (BYOC). Prompts and responses never leave your VPC.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - llm
+  - ai
+  - machine-learning
+  - kubernetes
+  - vllm
+  - byoc
+
+home: https://openserve.io
+sources:
+  - https://github.com/openserve/openserve
+
+maintainers:
+  - name: openserve maintainers
+    email: maintainers@openserve.io
+
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/signKey: |
+    fingerprint: <add-cosign-fingerprint>
+    url: https://openserve.io/cosign.pub
+
+dependencies:
+  - name: cert-manager
+    version: ">=1.14.0"
+    repository: https://charts.jetstack.io
+    condition: certManager.install
+  - name: keda
+    version: ">=2.13.0"
+    repository: https://kedacore.github.io/charts
+    condition: keda.install

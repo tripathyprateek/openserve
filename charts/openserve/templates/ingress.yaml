@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "openserve.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    {{- if .Values.cloudArmor.securityPolicy }}
+    cloud.google.com/armor-security-policy: {{ .Values.cloudArmor.securityPolicy }}
+    {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.domain }}
+      http:
+        paths:
+          - path: /inference
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "openserve.fullname" . }}-gateway
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "openserve.fullname" . }}-control-api
+                port:
+                  number: 80
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "openserve.fullname" . }}-gui
+                port:
+                  number: 80

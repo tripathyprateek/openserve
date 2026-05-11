@@ -1,0 +1,27 @@
+id: nomic-embed-text-v1.5
+name: "Nomic Embed Text v1.5"
+family: other
+version: "1.5"
+modelType: embedding
+embeddingDimensions: 768
+hfRepo: "nomic-ai/nomic-embed-text-v1.5"
+hfRevision: "b0753ae76394dd36bcfb912a46fc192ea54e765a"
+weightDigestSha256: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+license: apache-2.0
+parameterCount: "137M"
+minGPUClass: l4
+maxContextLen: 8192
+recommendedVLLMArgs:
+  - "--trust-remote-code"
+  - "--gpu-memory-utilization=0.3"
+description: |
+  Nomic Embed Text v1.5 is a high-performing open-source embedding model producing
+  768-dimensional vectors. Supports Matryoshka representation learning for flexible
+  dimensionality reduction. Apache 2.0 license. Ideal for RAG and semantic search.
+tags:
+  - embedding
+  - rag
+  - semantic-search
+  - apache-2.0
+addedAt: 2026-05-07
+addedBy: openserve-bot

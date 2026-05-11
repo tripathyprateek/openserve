@@ -1,0 +1,53 @@
+# Build artifacts
+bin/
+dist/
+*.exe
+
+# Go
+*.test
+*.out
+vendor/
+coverage.txt
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+apps/gui/.env.local
+apps/gui/.env.*.local
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# Helm
+charts/*/charts/
+*.tgz
+
+# Secrets — never commit these
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+serviceaccount.json
+credentials.json
+*-sa-key.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Generated
+zz_generated*.go
+config/crd/bases/
+config/rbac/
+.env.dev
+.superpowers/

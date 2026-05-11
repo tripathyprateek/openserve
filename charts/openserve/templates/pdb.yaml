@@ -1,0 +1,34 @@
+{{- if gt (int .Values.controlApi.replicas) 1 }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "openserve.fullname" . }}-control-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: control-api
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "openserve.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: control-api
+{{- end }}
+{{- if gt (int .Values.gateway.replicas) 1 }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "openserve.fullname" . }}-gateway
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      {{- include "openserve.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: gateway
+{{- end }}

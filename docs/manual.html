@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openserve — User Manual</title>
+  <meta name="description" content="Complete user manual for openserve: installation, model deployment, API keys, gateway, RAG, security, and troubleshooting." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080810;
+      --bg-card:   #0f0f1a;
+      --bg-subtle: #13131f;
+      --sidebar-w: 260px;
+      --border:    rgba(255,255,255,0.07);
+      --text:      #e2e2f0;
+      --muted:     #6b6b8a;
+      --accent:    #7c6af7;
+      --accent-2:  #22d3ee;
+      --green:     #34d399;
+      --yellow:    #fbbf24;
+      --red:       #f87171;
+      --font:      'Inter', system-ui, sans-serif;
+      --mono:      'JetBrains Mono', 'Fira Code', monospace;
+      --radius:    8px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────────────────── */
+    aside {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      background: var(--bg-card);
+      padding: 24px 0 40px;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-logo {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      text-decoration: none;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      display: block;
+    }
+    .sidebar-logo span { color: var(--accent); }
+    .sidebar-back {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 12px 20px 0;
+      transition: color .15s;
+    }
+    .sidebar-back:hover { color: var(--text); }
+    nav.sidebar-nav { margin-top: 8px; }
+    .nav-group { margin-top: 12px; }
+    .nav-group-label {
+      font-size: 10.5px;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 8px 20px 4px;
+      font-weight: 500;
+    }
+    .sidebar-nav a {
+      display: block;
+      padding: 5px 20px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13.5px;
+      transition: color .15s, background .15s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-nav a:hover { color: var(--text); background: rgba(255,255,255,.03); }
+    .sidebar-nav a.active { color: var(--accent); border-left-color: var(--accent); background: rgba(124,106,247,.06); }
+
+    /* ── Main content ────────────────────────────────────────────────────── */
+    main {
+      flex: 1;
+      min-width: 0;
+      padding: 56px 64px;
+      max-width: 860px;
+    }
+
+    /* ── Typography ──────────────────────────────────────────────────────── */
+    h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.25; margin-bottom: 12px; }
+    h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; margin: 48px 0 14px; padding-top: 48px; border-top: 1px solid var(--border); }
+    h2:first-of-type { border-top: none; padding-top: 0; margin-top: 32px; }
+    h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; }
+    h4 { font-size: 14px; font-weight: 500; color: var(--accent); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+    p  { color: var(--muted); margin-bottom: 14px; }
+    ul, ol { padding-left: 24px; color: var(--muted); margin-bottom: 14px; }
+    ul li, ol li { margin-bottom: 5px; }
+    strong { color: var(--text); font-weight: 500; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Code ────────────────────────────────────────────────────────────── */
+    code {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      color: var(--accent-2);
+    }
+    pre {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.8;
+      overflow-x: auto;
+      color: #c9d1d9;
+      margin: 16px 0;
+      position: relative;
+    }
+    pre code { background: none; border: none; padding: 0; color: inherit; font-size: inherit; }
+    .pre-header {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 8px 16px;
+      font-size: 11.5px;
+      color: var(--muted);
+      font-family: var(--mono);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .pre-header + pre { border-radius: 0 0 var(--radius) var(--radius); }
+    .copy-pre {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 2px 8px;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: color .15s;
+    }
+    .copy-pre:hover { color: var(--text); border-color: var(--accent); }
+
+    .cm { color: #6e7681; }
+    .ck { color: #ff7b72; }
+    .cs { color: #a5d6ff; }
+    .cv { color: #ffa657; }
+    .cx { color: #7ee787; }
+
+    /* ── Callouts ────────────────────────────────────────────────────────── */
+    .callout {
+      display: flex;
+      gap: 12px;
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 13.5px;
+    }
+    .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .callout p { margin: 0; font-size: 13.5px; }
+    .callout-info  { background: rgba(34,211,238,.07); border: 1px solid rgba(34,211,238,.2); }
+    .callout-warn  { background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.2); }
+    .callout-warn p { color: var(--yellow); }
+    .callout-danger { background: rgba(248,113,113,.07); border: 1px solid rgba(248,113,113,.2); }
+    .callout-danger p { color: var(--red); }
+    .callout-tip   { background: rgba(52,211,153,.07); border: 1px solid rgba(52,211,153,.2); }
+    .callout-tip p { color: var(--green); }
+
+    /* ── Tables ──────────────────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; margin: 16px 0; border: 1px solid var(--border); border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    thead th {
+      background: var(--bg-card);
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 500;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 11px 16px; color: var(--muted); }
+    tbody td:first-child { color: var(--text); font-family: var(--mono); font-size: 12px; }
+
+    /* ── Steps ───────────────────────────────────────────────────────────── */
+    .steps { margin: 20px 0; }
+    .step {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .step-num {
+      width: 28px; height: 28px;
+      background: rgba(124,106,247,.15);
+      border: 1px solid rgba(124,106,247,.3);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step-body h4 { margin: 0 0 6px; font-size: 14px; text-transform: none; letter-spacing: 0; color: var(--text); }
+    .step-body p  { margin: 0; font-size: 13.5px; }
+
+    /* ── Section intro ───────────────────────────────────────────────────── */
+    .section-intro {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 28px;
+      border-left: 3px solid var(--accent);
+      padding-left: 16px;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────────────── */
+    @media (max-width: 800px) {
+      aside { display: none; }
+      main  { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ───────────────────────────────────────────────────────────── -->
+<aside>
+  <a class="sidebar-logo" href="index.html"><span>open</span>serve</a>
+  <a class="sidebar-back" href="index.html">← Back to home</a>
+
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <div class="nav-group-label">Overview</div>
+      <a href="#introduction">Introduction</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#components">Components</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Installation</div>
+      <a href="#prerequisites">Prerequisites</a>
+      <a href="#terraform">Terraform setup</a>
+      <a href="#helm-install">Helm install</a>
+      <a href="#local-dev">Local development</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Core workflows</div>
+      <a href="#models">Model catalog</a>
+      <a href="#deployments">Deployments</a>
+      <a href="#api-keys">API keys</a>
+      <a href="#calling-api">Calling the API</a>
+      <a href="#rate-limits">Rate limits</a>
+      <a href="#budget">Budget caps</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Advanced</div>
+      <a href="#lora">LoRA adapters</a>
+      <a href="#sglang">SGLang engine</a>
+      <a href="#rag">RAG / documents</a>
+      <a href="#prefix-cache">Prefix caching</a>
+      <a href="#oidc">OIDC providers</a>
+      <a href="#peers">Peer relay</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Operations</div>
+      <a href="#audit">Audit log</a>
+      <a href="#usage">Usage & billing</a>
+      <a href="#members">Members & roles</a>
+      <a href="#security-ops">Security hardening</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Reference</div>
+      <a href="#crd-reference">CRD reference</a>
+      <a href="#api-reference">REST API reference</a>
+      <a href="#env-vars">Environment variables</a>
+      <a href="#troubleshooting">Troubleshooting</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- ── Main content ──────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Introduction -->
+  <div id="introduction">
+    <h1>openserve User Manual</h1>
+    <p class="section-intro">BYOC LLM serving — deploy open-source models inside your own cloud. Prompts never leave your VPC.</p>
+
+    <p>openserve is a Kubernetes-native platform for running open-source large language models (LLMs) inside a customer's own GCP project. Unlike managed-cloud inference providers, every prompt and response stays inside <strong>your</strong> infrastructure — openserve is the control plane, not the data plane for third-party systems.</p>
+
+    <p>This manual covers installation, day-to-day operations, the full REST API, and advanced configuration. For a quick overview, see the <a href="index.html">landing page</a>.</p>
+
+    <div class="callout callout-info">
+      <span class="callout-icon">ℹ️</span>
+      <p><strong>Version:</strong> This manual documents openserve v1. AWS and Azure adapters are planned for v2/v3. Currently GCP (GKE) only.</p>
+    </div>
+  </div>
+
+  <!-- Architecture -->
+  <h2 id="architecture">Architecture</h2>
+  <p>openserve consists of four components running inside the customer's Kubernetes cluster, plus GCP managed services the customer provisions:</p>
+
+  <pre><code>Customer's GCP project
+├─ GKE cluster
+│  ├─ openserve-operator      Kubernetes controller (CRD reconciler)
+│  ├─ openserve-control-api   REST API + OIDC auth + audit log
+│  ├─ openserve-gateway       API key auth + rate limit + proxy
+│  ├─ openserve-gui           Next.js web UI
+│  └─ vllm-&lt;model-id&gt;        one pod per deployment, scale-to-zero
+├─ Cloud SQL (Postgres 15+)   org/user/key/audit data, private IP only
+├─ Memorystore (Redis 7)      rate-limit counters (RPM + TPM)
+├─ GCS bucket                 model weight cache (CMEK encrypted)
+└─ BigQuery                   token usage + spend telemetry</code></pre>
+
+  <p><strong>Request path:</strong> Internet → Cloud Armor → Load Balancer → gateway → vLLM pod. The gateway validates the API key (Postgres/Argon2id), checks rate limits (Redis sliding window), resolves the target pod (prefix-cache-aware consistent hash), and streams the response without buffering.</p>
+
+  <!-- Components -->
+  <h2 id="components">Components</h2>
+
+  <h3>operator</h3>
+  <p>The <code>operator</code> is a Kubernetes controller that reconciles three custom resources (CRDs) into real GKE infrastructure:</p>
+  <ul>
+    <li><strong>ModelDeployment</strong> → creates a <code>vllm-&lt;name&gt;</code> Deployment + ClusterIP Service + KEDA ScaledObject + ConfigMap route entry</li>
+    <li><strong>APIKey</strong> → syncs key metadata into the gateway's routing ConfigMap</li>
+    <li><strong>BudgetPolicy</strong> → polls BigQuery spend every 5 min; scales to 0 when the daily/monthly cap is breached</li>
+  </ul>
+
+  <h3>control-api</h3>
+  <p>The REST API consumed by the GUI and direct API clients. Handles OIDC login, org/member management, deployment CRUD, API key lifecycle, RAG document upload, audit log queries, and usage stats. Never handles inference traffic directly.</p>
+
+  <h3>gateway</h3>
+  <p>A Go reverse proxy that sits in front of every vLLM pod. For each request it: validates the API key, checks RPM/TPM rate limits, resolves the deployment → pod address, enforces token caps, proxies the SSE stream without buffering, and records actual token usage post-stream for accurate TPM tracking.</p>
+
+  <h3>gui</h3>
+  <p>A Next.js web application served at the domain root. Communicates only with the control-api (never directly with vLLM). Provides catalog browsing, one-click deployment, API key management, usage charts, member management, and audit log views.</p>
+
+  <!-- Prerequisites -->
+  <h2 id="prerequisites">Prerequisites</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Requirement</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr><td>GCP project</td><td>Billing enabled; owner or editor role</td></tr>
+        <tr><td>GKE cluster</td><td>Version ≥ 1.28; GPU node pools: L4 (for 7B–13B) and/or A100-40G (30B–70B)</td></tr>
+        <tr><td>Cloud SQL</td><td>Postgres 15+, private IP, pgvector extension enabled (<code>--database-flags=cloudsql.enable_pg_cron=on</code>)</td></tr>
+        <tr><td>Memorystore</td><td>Redis 7, private IP, within the same VPC as GKE</td></tr>
+        <tr><td>GCS bucket</td><td>Regional, CMEK recommended; the operator SA needs <code>storage.objectAdmin</code></td></tr>
+        <tr><td>BigQuery dataset</td><td>For spend telemetry; the control-api SA needs <code>bigquery.dataViewer</code></td></tr>
+        <tr><td>OIDC provider</td><td>Google Workspace (default), Okta, Azure AD, or any RFC 8414 provider</td></tr>
+        <tr><td>helm ≥ 3.14</td><td><code>helm version</code></td></tr>
+        <tr><td>kubectl</td><td>Pointed at the target cluster</td></tr>
+        <tr><td>KEDA v2</td><td>Installed in the cluster (included as Helm subchart)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Terraform -->
+  <h2 id="terraform">Terraform GCP Setup</h2>
+  <p>The <code>examples/terraform/gcp-prereqs</code> directory provisions all GCP prerequisites (VPC, Cloud SQL, Redis, GCS bucket, BigQuery dataset, Workload Identity bindings):</p>
+
+  <div class="pre-header">
+    <span>bash</span>
+    <button class="copy-pre" onclick="copyPre(this)">copy</button>
+  </div>
+  <pre><code>cd examples/terraform/gcp-prereqs
+cp terraform.tfvars.example terraform.tfvars
+
+<span class="cm"># Edit terraform.tfvars — at minimum set:</span>
+<span class="cv">gcp_project</span> = <span class="cs">"your-gcp-project-id"</span>
+<span class="cv">region</span>      = <span class="cs">"us-central1"</span>
+<span class="cv">domain</span>      = <span class="cs">"ai.acme.com"</span>
+
+terraform init
+terraform plan
+terraform apply   <span class="cm"># ~8 min to provision all resources</span></code></pre>
+
+  <p>Terraform outputs the values you need for <code>helm install</code>: <code>postgres_host</code>, <code>redis_host</code>, <code>gcs_bucket</code>.</p>
+
+  <!-- Helm install -->
+  <h2 id="helm-install">Helm Install</h2>
+
+  <div class="pre-header">
+    <span>bash</span>
+    <button class="copy-pre" onclick="copyPre(this)">copy</button>
+  </div>
+  <pre><code>helm repo add openserve https://charts.openserve.io
+helm repo update
+
+helm install openserve openserve/openserve \
+  --namespace openserve-system --create-namespace \
+  --set domain=<span class="cv">ai.acme.com</span> \
+  --set google.clientId=<span class="cv">YOUR_GOOGLE_CLIENT_ID</span> \
+  --set postgres.host=<span class="cv">10.0.0.5</span> \
+  --set postgres.secret=<span class="cv">openserve-postgres-secret</span> \
+  --set redis.host=<span class="cv">10.0.0.6</span> \
+  --set gcs.bucket=<span class="cv">acme-openserve-models</span> \
+  --set billing.bigqueryDataset=<span class="cv">openserve_usage</span> \
+  --wait --timeout=5m</code></pre>
+
+  <div class="callout callout-info">
+    <span class="callout-icon">ℹ️</span>
+    <p>To use Okta, Azure AD, or another OIDC provider instead of Google, add <code>--set oidc.issuerUrl=https://your-okta-domain.okta.com</code> and <code>--set oidc.clientId=...</code>. See the <a href="#oidc">OIDC section</a>.</p>
+  </div>
+
+  <h3>Upgrade</h3>
+  <pre><code>helm repo update
+helm upgrade openserve openserve/openserve \
+  --namespace openserve-system \
+  --reuse-values</code></pre>
+
+  <h3>Uninstall</h3>
+  <pre><code>helm uninstall openserve --namespace openserve-system
+<span class="cm"># CRDs are NOT deleted by default — delete manually if desired:</span>
+kubectl delete crd modeldeployments.openserve.io apikeys.openserve.io budgetpolicies.openserve.io</code></pre>
+
+  <!-- Local dev -->
+  <h2 id="local-dev">Local Development</h2>
+  <p>Run the entire stack locally with Docker Compose. No Kubernetes required — a mock vLLM server handles inference.</p>
+
+  <div class="pre-header">
+    <span>bash</span>
+    <button class="copy-pre" onclick="copyPre(this)">copy</button>
+  </div>
+  <pre><code>git clone https://github.com/openserve/openserve
+cd openserve
+
+<span class="cm"># Copy the dev env file (DEV_EMAIL bypasses OIDC)</span>
+cp .env.dev.example .env.dev
+
+<span class="cm"># Build and start all services</span>
+docker compose --env-file .env.dev up --build
+
+<span class="cm"># Services:</span>
+<span class="cm">#   control-api  → http://localhost:8080</span>
+<span class="cm">#   gateway      → http://localhost:8081</span>
+<span class="cm">#   gui          → http://localhost:3000</span>
+<span class="cm">#   mock-vllm    → http://localhost:8000</span></code></pre>
+
+  <p>Run the end-to-end demo script to validate the full flow:</p>
+  <pre><code>bash hack/local-demo.sh</code></pre>
+
+  <div class="callout callout-warn">
+    <span class="callout-icon">⚠️</span>
+    <p><strong>Never use <code>DEV_EMAIL</code> in production.</strong> It bypasses all authentication. Set it only in <code>.env.dev</code> for local testing.</p>
+  </div>
+
+  <!-- Model catalog -->
+  <h2 id="models">Model Catalog</h2>
+  <p>The catalog ships ~25 vetted open-source models. Each entry includes the Hugging Face model ID, recommended GPU class, vLLM args, and a cosign-signed SHA256 weight digest.</p>
+
+  <h3>Browse the catalog</h3>
+  <pre><code>curl https://ai.acme.com/api/v1/catalog \
+  -H "Authorization: Bearer $TOKEN" | jq '.models[].id'</code></pre>
+
+  <h3>Request a new model</h3>
+  <p>Open a GitHub issue using the <em>Request a model</em> template. The team vets the license, cosign-signs the manifest, and adds the catalog entry — typically within a few days.</p>
+
+  <div class="callout callout-info">
+    <span class="callout-icon">ℹ️</span>
+    <p>Catalog YAML files live in <code>catalog/models/</code>. The <code>weightDigestSha256</code> field is a placeholder in the repo; real values are computed and signed during the release process. The CI pipeline rejects PRs with unchecked placeholder values.</p>
+  </div>
+
+  <!-- Deployments -->
+  <h2 id="deployments">Deployments</h2>
+  <p>A <strong>ModelDeployment</strong> is a Kubernetes CRD that represents a deployed model. The operator reconciles it into a vLLM Deployment + Service + KEDA ScaledObject.</p>
+
+  <h3>Create a deployment (GUI)</h3>
+  <div class="steps">
+    <div class="step"><div class="step-num">1</div><div class="step-body"><h4>Open the Catalog tab</h4><p>Browse the list of available models. Each card shows GPU class, parameter count, and estimated cost/hour.</p></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><h4>Click "Deploy"</h4><p>Configure GPU class, scale-to-zero, idle timeout, replicas, and daily budget cap.</p></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><h4>Wait for phase=Running</h4><p>The operator downloads and verifies the weights (~2–4 min for 8B, ~8–12 min for 70B). Phase transitions: Pending → Pulling → Verifying → Running.</p></div></div>
+  </div>
+
+  <h3>Create a deployment (API)</h3>
+  <div class="pre-header"><span>bash</span><button class="copy-pre" onclick="copyPre(this)">copy</button></div>
+  <pre><code>curl -X POST https://ai.acme.com/api/v1/deployments \
+  -H <span class="cs">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -d <span class="cs">'{
+    "modelRef":       "llama-3-8b-instruct",
+    "gpuClass":       "l4",
+    "scaleToZero":    true,
+    "idleTimeoutMin": 10,
+    "minReplicas":    0,
+    "maxReplicas":    2,
+    "budget":  { "dailyUsdCap": "50" },
+    "limits":  { "maxInputTokens": 8192, "maxOutputTokens": 4096 },
+    "description": "Production Llama 3 8B"
+  }'</span></code></pre>
+
+  <h3>Deployment phases</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Phase</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Pending</td><td>CR created; operator has not yet reconciled</td></tr>
+        <tr><td>Pulling</td><td>Weight files downloading from GCS / HuggingFace</td></tr>
+        <tr><td>Verifying</td><td>SHA256 digest check + cosign signature verification</td></tr>
+        <tr><td>Running</td><td>At least one replica ready; gateway route active</td></tr>
+        <tr><td>ScaledToZero</td><td>KEDA has scaled replicas to 0 due to inactivity</td></tr>
+        <tr><td>BudgetPaused</td><td>Daily spend exceeded the cap; manually resume with POST /resume</td></tr>
+        <tr><td>Failed</td><td>Unrecoverable error; check <code>status.conditions</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Resume a budget-paused deployment</h3>
+  <pre><code>curl -X POST https://ai.acme.com/api/v1/deployments/<span class="cv">{id}</span>/resume \
+  -H "Authorization: Bearer $ADMIN_TOKEN"</code></pre>
+
+  <!-- API Keys -->
+  <h2 id="api-keys">API Keys</h2>
+  <p>API keys authenticate calls to the gateway. They are Argon2id-hashed before storage. The raw key is returned once at creation and cannot be retrieved again.</p>
+
+  <h3>Create a key</h3>
+  <div class="pre-header"><span>bash</span><button class="copy-pre" onclick="copyPre(this)">copy</button></div>
+  <pre><code>curl -X POST https://ai.acme.com/api/v1/keys \
+  -H <span class="cs">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -d <span class="cs">'{"displayName": "prod-app"}'</span>
+
+<span class="cm"># Response — save the key immediately:</span>
+{
+  <span class="cs">"key"</span>: <span class="cs">"openserve_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"</span>,
+  <span class="cs">"id"</span>:  <span class="cs">"01HXY..."</span>
+}</code></pre>
+
+  <div class="callout callout-danger">
+    <span class="callout-icon">🚨</span>
+    <p>The raw key is shown <strong>once</strong> and then discarded. Store it in a secret manager (e.g. GCP Secret Manager) immediately. If lost, rotate the key.</p>
+  </div>
+
+  <h3>Rotate a key</h3>
+  <pre><code>curl -X POST https://ai.acme.com/api/v1/keys/<span class="cv">{id}</span>/rotate \
+  -H "Authorization: Bearer $TOKEN"</code></pre>
+
+  <h3>Delete a key</h3>
+  <pre><code>curl -X DELETE https://ai.acme.com/api/v1/keys/<span class="cv">{id}</span> \
+  -H "Authorization: Bearer $TOKEN"</code></pre>
+
+  <!-- Calling the API -->
+  <h2 id="calling-api">Calling the Inference API</h2>
+  <p>The gateway exposes an OpenAI-compatible API. Any SDK or tool that supports a custom <code>base_url</code> works without code changes.</p>
+
+  <h3>curl (streaming)</h3>
+  <div class="pre-header"><span>bash</span><button class="copy-pre" onclick="copyPre(this)">copy</button></div>
+  <pre><code>curl https://ai.acme.com/v1/chat/completions \
+  -H <span class="cs">"Authorization: Bearer openserve_live_xxx"</span> \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -d <span class="cs">'{
+    "model":    "llama-3-8b-instruct",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "stream":   true
+  }'</span></code></pre>
+
+  <h3>Python (openai SDK)</h3>
+  <div class="pre-header"><span>python</span><button class="copy-pre" onclick="copyPre(this)">copy</button></div>
+  <pre><code><span class="ck">from</span> openai <span class="ck">import</span> OpenAI
+
+client = OpenAI(
+    base_url=<span class="cs">"https://ai.acme.com"</span>,
+    api_key=<span class="cs">"openserve_live_xxx"</span>,
+)
+
+stream = client.chat.completions.create(
+    model=<span class="cs">"llama-3-8b-instruct"</span>,
+    messages=[{<span class="cs">"role"</span>: <span class="cs">"user"</span>, <span class="cs">"content"</span>: <span class="cs">"Explain BYOC."</span>}],
+    stream=<span class="ck">True</span>,
+)
+<span class="ck">for</span> chunk <span class="ck">in</span> stream:
+    <span class="ck">print</span>(chunk.choices[0].delta.content <span class="ck">or</span> <span class="cs">""</span>, end=<span class="cs">""</span>, flush=<span class="ck">True</span>)</code></pre>
+
+  <h3>Using a LoRA adapter</h3>
+  <pre><code><span class="cm"># Set model= to the adapter name (not the base model ID)</span>
+client.chat.completions.create(
+    model=<span class="cs">"my-finetuned-adapter"</span>,   <span class="cm"># matches loraAdapters[].name in the CR</span>
+    messages=[...],
+)</code></pre>
+
+  <!-- Rate limits -->
+  <h2 id="rate-limits">Rate Limits</h2>
+  <p>Each API key has independent RPM (requests per minute) and TPM (tokens per minute) counters backed by a Redis sliding-window. Actual token counts (not estimates) are recorded <em>after</em> each response stream completes.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Default</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>RPM</td><td>60 requests / minute</td></tr>
+        <tr><td>TPM</td><td>100,000 tokens / minute</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>When a limit is exceeded, the gateway returns <code>429 Too Many Requests</code> with a <code>Retry-After</code> header indicating when the oldest request expires from the window.</p>
+
+  <h3>Adjusting limits</h3>
+  <p>Currently via direct DB update or the GUI key editor. A <code>PATCH /api/v1/keys/{id}</code> endpoint with <code>rpm</code>/<code>tpm</code> body fields is on the v1.1 roadmap.</p>
+
+  <!-- Budget -->
+  <h2 id="budget">Budget Caps</h2>
+  <p>A <strong>BudgetPolicy</strong> CRD enforces a daily USD spending ceiling per deployment. The operator polls BigQuery for actual spend every 5 minutes.</p>
+
+  <div class="pre-header"><span>yaml — BudgetPolicy CRD</span><button class="copy-pre" onclick="copyPre(this)">copy</button></div>
+  <pre><code>apiVersion: openserve.io/v1alpha1
+kind: BudgetPolicy
+metadata:
+  name: llama-3-8b-budget
+  namespace: openserve-inference
+spec:
+  deploymentRef: llama-3-8b-instruct
+  dailyUsdCap: "50"
+  monthlyUsdCap: "1000"       <span class="cm"># optional</span>
+  alertThresholdPercent: 80   <span class="cm"># alert (no pause) at 80% of cap</span></code></pre>
+
+  <p>Or set it inline on the <code>ModelDeployment</code>:</p>
+  <pre><code>spec:
+  budget:
+    dailyUsdCap: <span class="cs">"50"</span>
+    alertThresholdPercent: 80</code></pre>
+
+  <p>When the daily cap is breached, the deployment transitions to <strong>BudgetPaused</strong> and replicas scale to 0. Resume manually:</p>
+  <pre><code>curl -X POST https://ai.acme.com/api/v1/deployments/<span class="cv">{id}</span>/resume \
+  -H "Authorization: Bearer $ADMIN_TOKEN"</code></pre>
+
+  <!-- LoRA adapters -->
+  <h2 id="lora">LoRA Adapters</h2>
+  <p>Fine-tuned LoRA adapters can be hot-loaded into a running vLLM pod without redeployment. The operator calls the vLLM <code>/v1/load_lora_adapter</code> API after the deployment reaches <strong>Running</strong> phase.</p>
+
+  <div class="pre-header"><span>yaml — ModelDeployment with LoRA</span><button class="copy-pre" onclick="copyPre(this)">copy</button></div>
+  <pre><code>spec:
+  modelRef: llama-3-8b-instruct
+  loraAdapters:
+    - name: acme-legal-v2         <span class="cm"># use as model= in API calls</span>
+      path: gs://my-bucket/lora/acme-legal-v2
+      baseModel: llama-3-8b-instruct
+    - name: acme-support-v1
+      path: gs://my-bucket/lora/acme-support-v1
+      baseModel: llama-3-8b-instruct</code></pre>
+
+  <p>Loaded adapters are tracked in <code>status.loadedLoRAAdapters</code>. Check:</p>
+  <pre><code>kubectl get modeldeployment llama-3-8b-instruct \
+  -n openserve-inference -o jsonpath='{.status.loadedLoRAAdapters}'</code></pre>
+
+  <!-- SGLang -->
+  <h2 id="sglang">SGLang Engine</h2>
+  <p>Set <code>spec.engine: sglang</code> to use SGLang instead of vLLM. SGLang is recommended for:</p>
+  <ul>
+    <li>Structured generation (JSON mode, regex constraints)</li>
+    <li>Long-context workloads (128K+ token sequences)</li>
+    <li>Benchmarks where SGLang throughput exceeds vLLM</li>
+  </ul>
+
+  <pre><code>spec:
+  modelRef: llama-3-8b-instruct
+  engine: sglang   <span class="cm"># default is "vllm"</span></code></pre>
+
+  <p>The KEDA scaler automatically uses the SGLang metric (<code>sglang:num_running_reqs</code>) instead of the vLLM metric when <code>engine: sglang</code> is set.</p>
+
+  <!-- RAG -->
+  <h2 id="rag">RAG / Document Retrieval</h2>
+  <p>openserve includes a built-in retrieval-augmented generation (RAG) pipeline backed by pgvector. Upload documents via the control-api; embeddings are stored in an IVFFlat index (cosine similarity, lists=100).</p>
+
+  <div class="callout callout-info">
+    <span class="callout-icon">ℹ️</span>
+    <p>RAG requires an external embedding endpoint (e.g. a deployed <code>nomic-embed-text-v1.5</code> deployment). Set <code>EMBEDDING_ENDPOINT</code> env var on the control-api.</p>
+  </div>
+
+  <h3>Upload a document</h3>
+  <pre><code>curl -X POST https://ai.acme.com/api/v1/documents \
+  -H <span class="cs">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -d <span class="cs">'{
+    "title":   "Q4 2025 Product Spec",
+    "content": "openserve v2 will add AWS EKS support..."
+  }'</span></code></pre>
+
+  <h3>Retrieve relevant chunks</h3>
+  <pre><code>curl -X POST https://ai.acme.com/api/v1/rag/retrieve \
+  -H <span class="cs">"Authorization: Bearer $TOKEN"</span> \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -d <span class="cs">'{"query": "AWS support timeline", "topK": 5}'</span></code></pre>
+
+  <!-- Prefix caching -->
+  <h2 id="prefix-cache">Prefix-Cache Routing</h2>
+  <p>When a deployment has <code>maxReplicas > 1</code>, the operator writes per-pod IP addresses into the routing ConfigMap (<code>podRoutes</code> section). The gateway then uses FNV-1a consistent hashing on the system prompt prefix (first 512 chars) to route requests to the same pod — maximising the KV-cache hit rate and reducing TTFT.</p>
+
+  <p>This is automatic. No configuration is required. Falls back to service-VIP routing when only one replica exists.</p>
+
+  <!-- OIDC -->
+  <h2 id="oidc">OIDC Providers</h2>
+  <p>openserve supports any RFC 8414 compliant OIDC provider. Set <code>OIDC_ISSUER_URL</code> and <code>OIDC_CLIENT_ID</code> environment variables (or Helm values).</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Provider</th><th>OIDC_ISSUER_URL</th></tr></thead>
+      <tbody>
+        <tr><td>Google Workspace (default)</td><td><code>https://accounts.google.com</code></td></tr>
+        <tr><td>Okta</td><td><code>https://your-domain.okta.com</code></td></tr>
+        <tr><td>Azure AD</td><td><code>https://login.microsoftonline.com/{tenant}/v2.0</code></td></tr>
+        <tr><td>GitHub Actions</td><td><code>https://token.actions.githubusercontent.com</code></td></tr>
+        <tr><td>Keycloak</td><td><code>https://keycloak.acme.com/realms/your-realm</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Peers -->
+  <h2 id="peers">Peer Relay</h2>
+  <p>The peer-relay service enables external partner compute nodes to register as inference upstreams. Partners connect via WebSocket and receive inference requests routed through the gateway.</p>
+
+  <h3>Create a peer</h3>
+  <pre><code>curl -X POST https://ai.acme.com/api/v1/peers \
+  -H <span class="cs">"Authorization: Bearer $ADMIN_TOKEN"</span> \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -d <span class="cs">'{"name": "acme-hq-gpu-cluster", "description": "On-prem A100s"}'</span></code></pre>
+
+  <h3>Create an invite token</h3>
+  <pre><code>curl -X POST https://ai.acme.com/api/v1/peers/<span class="cv">{id}</span>/invites \
+  -H <span class="cs">"Authorization: Bearer $ADMIN_TOKEN"</span></code></pre>
+
+  <!-- Audit log -->
+  <h2 id="audit">Audit Log</h2>
+  <p>Every action (login, key creation, deployment changes, member management) is written to the append-only <code>audit_log</code> table. Rows are never updated or deleted. Cloud Logging bucket lock provides WORM (write once, read many) guarantees.</p>
+
+  <pre><code>curl https://ai.acme.com/api/v1/audit?limit=100 \
+  -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.entries[] | {action, actor, createdAt}'</code></pre>
+
+  <!-- Usage -->
+  <h2 id="usage">Usage &amp; Billing</h2>
+  <p>Token usage and GPU-hour spend are streamed to BigQuery via the operator. The control-api aggregates this data for the usage dashboard.</p>
+
+  <pre><code>curl https://ai.acme.com/api/v1/usage \
+  -H "Authorization: Bearer $TOKEN"</code></pre>
+
+  <p>Returns daily token counts, request counts, and USD spend per deployment for the last 30 days.</p>
+
+  <!-- Members -->
+  <h2 id="members">Members &amp; Roles</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Role</th><th>Permissions</th></tr></thead>
+      <tbody>
+        <tr><td>viewer</td><td>Read catalog, view deployments, view usage</td></tr>
+        <tr><td>partner</td><td>viewer + peer relay access</td></tr>
+        <tr><td>developer</td><td>partner + create/delete deployments, manage own API keys</td></tr>
+        <tr><td>admin</td><td>All actions including invite/remove members, budget management, audit log</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The first user to log in from a domain is automatically assigned the <strong>admin</strong> role.</p>
+
+  <h3>Invite a member</h3>
+  <pre><code>curl -X POST https://ai.acme.com/api/v1/members/invite \
+  -H <span class="cs">"Authorization: Bearer $ADMIN_TOKEN"</span> \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -d <span class="cs">'{"email": "alice@acme.com", "role": "developer"}'</span></code></pre>
+
+  <!-- Security ops -->
+  <h2 id="security-ops">Security Hardening</h2>
+
+  <div class="callout callout-tip">
+    <span class="callout-icon">💡</span>
+    <p>Enable Cloud Armor on the external load balancer with a rate-limit rule (e.g. 100 req/s per IP) as the first line of defence before traffic reaches the gateway.</p>
+  </div>
+
+  <ul>
+    <li><strong>Rotate the JWT secret</strong> regularly: update the <code>jwt.secret</code> Helm value and roll the pods.</li>
+    <li><strong>Enable IP allowlisting</strong> on sensitive API keys via the key editor.</li>
+    <li><strong>Set key expiry</strong>: short-lived keys (7–30 days) reduce blast radius if a key leaks.</li>
+    <li><strong>Review audit logs weekly</strong>: look for unexpected <code>create_api_key</code> or <code>remove_member</code> entries.</li>
+    <li><strong>Run <code>govulncheck ./...</code></strong> in CI for each Go module: <code>operator</code>, <code>apps/control-api</code>, <code>apps/gateway</code>.</li>
+    <li><strong>Keep engine images pinned</strong>: bump <code>vllmImageTag</code> in <code>operator/internal/engine/vllm.go</code> only after reviewing the vLLM changelog.</li>
+  </ul>
+
+  <!-- CRD reference -->
+  <h2 id="crd-reference">CRD Reference</h2>
+
+  <h3>ModelDeployment</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>spec.modelRef</td><td>string</td><td>—</td><td>Catalog model ID (e.g. <code>llama-3-8b-instruct</code>)</td></tr>
+        <tr><td>spec.gpuClass</td><td>l4 | a100-40g | a100-80g</td><td>l4</td><td>GPU node pool</td></tr>
+        <tr><td>spec.scaleToZero</td><td>bool</td><td>true</td><td>Enable KEDA scale-to-zero</td></tr>
+        <tr><td>spec.idleTimeoutMin</td><td>int (1–1440)</td><td>10</td><td>Minutes of inactivity before scale-to-zero</td></tr>
+        <tr><td>spec.minReplicas</td><td>int (0–8)</td><td>0</td><td>Set to 1 for always-on</td></tr>
+        <tr><td>spec.maxReplicas</td><td>int (1–32)</td><td>1</td><td>Maximum replica count</td></tr>
+        <tr><td>spec.budget.dailyUsdCap</td><td>Quantity</td><td>"50"</td><td>Daily USD ceiling before auto-pause</td></tr>
+        <tr><td>spec.limits.maxInputTokens</td><td>int</td><td>8192</td><td>Hard cap on prompt length</td></tr>
+        <tr><td>spec.limits.maxOutputTokens</td><td>int</td><td>4096</td><td>Hard cap on generated output</td></tr>
+        <tr><td>spec.engine</td><td>vllm | sglang</td><td>vllm</td><td>Inference engine</td></tr>
+        <tr><td>spec.vllmArgs</td><td>[]string</td><td>—</td><td>Extra CLI args passed to vLLM/SGLang</td></tr>
+        <tr><td>spec.loraAdapters</td><td>[]LoRAAdapterSpec</td><td>—</td><td>LoRA adapters to hot-load</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- API reference -->
+  <h2 id="api-reference">REST API Reference</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Method + Path</th><th>Auth</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>GET /healthz</td><td>None</td><td>Liveness probe</td></tr>
+        <tr><td>GET /api/v1/catalog</td><td>JWT</td><td>List all catalog models</td></tr>
+        <tr><td>POST /api/v1/deployments</td><td>JWT dev+</td><td>Create a ModelDeployment</td></tr>
+        <tr><td>GET /api/v1/deployments</td><td>JWT</td><td>List deployments</td></tr>
+        <tr><td>GET /api/v1/deployments/{id}</td><td>JWT</td><td>Get deployment + status</td></tr>
+        <tr><td>DELETE /api/v1/deployments/{id}</td><td>JWT dev+</td><td>Delete deployment</td></tr>
+        <tr><td>POST /api/v1/deployments/{id}/resume</td><td>JWT admin</td><td>Resume BudgetPaused deployment</td></tr>
+        <tr><td>POST /api/v1/keys</td><td>JWT dev+</td><td>Create API key (rate-limited 10/min)</td></tr>
+        <tr><td>GET /api/v1/keys</td><td>JWT</td><td>List API keys</td></tr>
+        <tr><td>DELETE /api/v1/keys/{id}</td><td>JWT dev+</td><td>Delete (deactivate) key</td></tr>
+        <tr><td>POST /api/v1/keys/{id}/rotate</td><td>JWT dev+</td><td>Rotate key, returns new raw value</td></tr>
+        <tr><td>GET /api/v1/usage</td><td>JWT</td><td>Token + spend usage (last 30 days)</td></tr>
+        <tr><td>GET /api/v1/audit</td><td>JWT admin</td><td>Audit log entries</td></tr>
+        <tr><td>POST /api/v1/documents</td><td>JWT dev+</td><td>Upload RAG document</td></tr>
+        <tr><td>GET /api/v1/documents</td><td>JWT</td><td>List uploaded documents</td></tr>
+        <tr><td>POST /api/v1/rag/retrieve</td><td>JWT</td><td>Retrieve top-K relevant chunks</td></tr>
+        <tr><td>GET /api/v1/members</td><td>JWT admin</td><td>List org members</td></tr>
+        <tr><td>POST /api/v1/members/invite</td><td>JWT admin</td><td>Invite a member by email</td></tr>
+        <tr><td>DELETE /api/v1/members/{id}</td><td>JWT admin</td><td>Remove a member</td></tr>
+        <tr><td>POST /api/v1/peers</td><td>JWT admin</td><td>Create peer relay</td></tr>
+        <tr><td>POST /v1/chat/completions</td><td>API key</td><td>Gateway inference endpoint (OpenAI-compat)</td></tr>
+        <tr><td>GET /v1/models</td><td>API key</td><td>List available models (gateway)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Env vars -->
+  <h2 id="env-vars">Environment Variables</h2>
+
+  <h3>control-api</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Variable</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>POSTGRES_URL</td><td>Yes</td><td>Postgres connection string</td></tr>
+        <tr><td>JWT_SECRET</td><td>Yes</td><td>≥32 byte random string for JWT signing</td></tr>
+        <tr><td>OIDC_ISSUER_URL</td><td>Yes (non-dev)</td><td>OIDC discovery endpoint</td></tr>
+        <tr><td>OIDC_CLIENT_ID</td><td>Yes (non-dev)</td><td>OAuth2 client ID</td></tr>
+        <tr><td>OIDC_CLIENT_SECRET</td><td>No</td><td>OAuth2 client secret (for code flow)</td></tr>
+        <tr><td>DEV_EMAIL</td><td>No</td><td>Bypasses OIDC; all requests authenticated as this email. <strong>Dev only.</strong></td></tr>
+        <tr><td>EMBEDDING_ENDPOINT</td><td>No</td><td>URL of the embedding model for RAG</td></tr>
+        <tr><td>BRAVE_API_KEY</td><td>No</td><td>For /api/v1/search web search feature</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>gateway</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Variable</th><th>Required</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>POSTGRES_URL</td><td>Yes</td><td>Postgres connection string (key validation)</td></tr>
+        <tr><td>REDIS_ADDR</td><td>Yes</td><td>Redis address <code>host:port</code> (rate limits)</td></tr>
+        <tr><td>PEER_RELAY_INTERNAL_URL</td><td>No</td><td>Internal URL of peer-relay service</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Troubleshooting -->
+  <h2 id="troubleshooting">Troubleshooting</h2>
+
+  <h3>control-api won't start — "extension vector is not available"</h3>
+  <p>Your Postgres instance doesn't have pgvector installed. In local dev, use <code>pgvector/pgvector:pg16</code> as the postgres image. On Cloud SQL, enable the <code>pgvector</code> database flag.</p>
+
+  <h3>gateway returns 503 — "deployment not found"</h3>
+  <p>The routing ConfigMap doesn't have an entry for that deployment ID. Check that the deployment is in <strong>Running</strong> phase (<code>kubectl get md -n openserve-inference</code>) and that the operator has reconciled the route (<code>kubectl get configmap openserve-routes -n openserve-system -o yaml</code>).</p>
+
+  <h3>Deployment stuck in "Pulling"</h3>
+  <p>Weight download from GCS or HuggingFace is slow. Check the vLLM pod logs: <code>kubectl logs -n openserve-inference -l app=vllm-llama-3-8b-instruct --tail=50</code>. Ensure the GCS bucket is in the same region as your GKE cluster.</p>
+
+  <h3>Rate limit returns 429 immediately</h3>
+  <p>The key's RPM or TPM is set too low. List keys via <code>GET /api/v1/keys</code> to check current limits. Update via the GUI key editor or directly in Postgres (dev only).</p>
+
+  <h3>go mod tidy fails — "go.mod requires go &gt;= 1.24.1"</h3>
+  <p>The control-api Dockerfile uses Go 1.24. Ensure your local Go version matches: <code>go version</code>. If building locally, run <code>go install golang.org/toolchain@go1.24.1</code> or set <code>GOTOOLCHAIN=auto</code>.</p>
+
+  <h3>Docker build fails on Apple Silicon</h3>
+  <p>Add <code>--platform linux/amd64</code> to the docker build command, or set <code>DOCKER_DEFAULT_PLATFORM=linux/amd64</code> in your shell.</p>
+
+  <h3>BudgetPaused — deployment keeps auto-pausing</h3>
+  <p>Either the daily spend is genuinely exceeding the cap, or BigQuery has stale/incorrect data. Check <code>status.todayUsdSpend</code> on the ModelDeployment. To raise the cap, patch <code>spec.budget.dailyUsdCap</code> and resume.</p>
+
+  <hr style="border:none;border-top:1px solid var(--border);margin:48px 0 32px;" />
+  <p style="font-size:13px;color:var(--muted);">openserve is Apache 2.0 licensed. Issues and PRs welcome at <a href="https://github.com/openserve/openserve">github.com/openserve/openserve</a>.</p>
+
+</main>
+
+<script>
+  // Copy buttons next to pre-header
+  document.querySelectorAll('.copy-pre').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pre = btn.closest('.pre-header').nextElementSibling;
+      navigator.clipboard.writeText(pre.innerText).then(() => {
+        btn.textContent = 'copied!';
+        setTimeout(() => btn.textContent = 'copy', 2000);
+      });
+    });
+  });
+
+  // Highlight active sidebar link on scroll
+  const headings = document.querySelectorAll('h2[id], h3[id], div[id]');
+  const links = document.querySelectorAll('.sidebar-nav a');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.sidebar-nav a[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  headings.forEach(h => io.observe(h));
+</script>
+</body>
+</html>

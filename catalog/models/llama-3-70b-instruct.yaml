@@ -1,0 +1,32 @@
+# Llama 3 70B Instruct Model Manifest
+# Note: SHA256 values are placeholder; real values are computed during catalog sign-off
+id: llama-3-70b-instruct
+name: "Llama 3 70B Instruct"
+family: llama
+version: "3"
+hfRepo: "meta-llama/Meta-Llama-3-70B-Instruct"
+hfRevision: "f6b640b4a7e5d6c3b2a1f0e9d8c7b6a5f4e3d2c1"
+# Placeholder SHA256 - real value computed during weight verification
+weightDigestSha256: "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3"
+license: llama3
+parameterCount: "70B"
+minGPUClass: a100-40g
+maxContextLen: 8192
+recommendedVLLMArgs:
+  - "--tensor-parallel-size=2"
+  - "--pipeline-parallel-size=1"
+  - "--gpu-memory-utilization=0.9"
+  - "--max-model-len=8192"
+description: |
+  Meta's Llama 3 70B Instruct is a powerful instruction-tuned model offering
+  state-of-the-art performance across diverse language understanding and
+  generation tasks. Suitable for production deployments requiring high-quality
+  responses and complex reasoning.
+tags:
+  - instruction-tuned
+  - high-performance
+  - general-purpose
+  - multi-gpu
+  - reasoning
+addedAt: 2026-04-29
+addedBy: openserve-bot

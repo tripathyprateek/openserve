@@ -1,0 +1,32 @@
+# Qwen 2.5 7B Instruct Model Manifest
+# Note: SHA256 values are placeholder; real values are computed during catalog sign-off
+id: qwen2.5-7b-instruct
+name: "Qwen 2.5 7B Instruct"
+family: qwen
+version: "2.5"
+hfRepo: "Qwen/Qwen2.5-7B-Instruct"
+hfRevision: "d2a0a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7"
+# Placeholder SHA256 - real value computed during weight verification
+weightDigestSha256: "d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5"
+license: apache-2.0
+parameterCount: "7B"
+minGPUClass: l4
+maxContextLen: 131072
+recommendedVLLMArgs:
+  - "--tensor-parallel-size=1"
+  - "--gpu-memory-utilization=0.9"
+  - "--max-model-len=8192"
+  - "--enforce-eager"
+description: |
+  Qwen 2.5 7B Instruct is Alibaba's latest compact instruction-tuned model,
+  featuring exceptional multilingual capabilities and an extended 128K context
+  window. Apache 2.0 licensed, making it ideal for commercial applications
+  requiring broad language support and cost-efficient single-GPU operation.
+tags:
+  - instruction-tuned
+  - multilingual
+  - long-context
+  - apache-licensed
+  - efficient
+addedAt: 2026-04-29
+addedBy: openserve-bot

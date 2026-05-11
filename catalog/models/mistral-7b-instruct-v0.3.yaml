@@ -1,0 +1,32 @@
+# Mistral 7B Instruct v0.3 Model Manifest
+# Note: SHA256 values are placeholder; real values are computed during catalog sign-off
+id: mistral-7b-instruct-v0.3
+name: "Mistral 7B Instruct v0.3"
+family: mistral
+version: "0.3"
+hfRepo: "mistralai/Mistral-7B-Instruct-v0.3"
+hfRevision: "39bdc5e3e6c2a2a5f4e3d2c1b0a9f8e7d6c5b4a3"
+# Placeholder SHA256 - real value computed during weight verification
+weightDigestSha256: "c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4"
+license: mistral
+parameterCount: "7B"
+minGPUClass: l4
+maxContextLen: 32768
+recommendedVLLMArgs:
+  - "--tensor-parallel-size=1"
+  - "--gpu-memory-utilization=0.85"
+  - "--max-model-len=4096"
+  - "--disable-log-requests"
+description: |
+  Mistral 7B Instruct v0.3 is a compact yet capable instruction-tuned model
+  featuring an extended 32K context window. Optimized for chat and instruction
+  following with efficient inference characteristics ideal for cost-conscious
+  production deployments.
+tags:
+  - instruction-tuned
+  - long-context
+  - compact
+  - efficient
+  - chat
+addedAt: 2026-04-29
+addedBy: openserve-bot

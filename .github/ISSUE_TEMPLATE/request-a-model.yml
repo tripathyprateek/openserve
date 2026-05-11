@@ -1,0 +1,73 @@
+name: "Request a model"
+description: "Request a new model to be added to the openserve catalog"
+labels: ["model-request"]
+
+body:
+  - type: input
+    id: model-name
+    attributes:
+      label: "Model name"
+      placeholder: "e.g., Llama 3 8B Instruct"
+      description: "The name of the model you'd like to request"
+    validations:
+      required: true
+
+  - type: input
+    id: huggingface-repo
+    attributes:
+      label: "HuggingFace repo URL"
+      placeholder: "meta-llama/Meta-Llama-3-8B-Instruct"
+      description: "The HuggingFace repository containing the model weights"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: license
+    attributes:
+      label: "License"
+      description: "The license under which the model is distributed"
+      options:
+        - "Apache 2.0"
+        - "MIT"
+        - "Llama community"
+        - "Mistral"
+        - "Gemma"
+        - "Other"
+    validations:
+      required: true
+
+  - type: input
+    id: parameter-count
+    attributes:
+      label: "Parameter count"
+      placeholder: "e.g., 8B, 70B"
+      description: "The number of parameters in the model (optional)"
+
+  - type: dropdown
+    id: min-gpu-class
+    attributes:
+      label: "Minimum GPU class needed"
+      description: "The minimum GPU required to run this model effectively"
+      options:
+        - "L4"
+        - "A100-40G"
+        - "A100-80G"
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: "Use case / reason for request"
+      description: "Explain why this model would be valuable for openserve"
+      placeholder: "e.g., This model offers excellent performance on code generation tasks and has a permissive license for commercial use."
+
+  - type: checkboxes
+    id: agreements
+    attributes:
+      label: "Confirmations"
+      options:
+        - label: "I have verified this model's license permits commercial use"
+          required: true
+        - label: "I understand openserve will verify weights before adding to catalog"
+          required: true

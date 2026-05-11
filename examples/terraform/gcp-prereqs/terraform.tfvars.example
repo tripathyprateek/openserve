@@ -1,0 +1,33 @@
+# OpenServe GCP Prerequisites — Example Terraform Variables
+
+# Required: Your GCP project ID
+gcp_project = "my-gcp-project-id"
+
+# GCP region for deployment (default: us-central1)
+region = "us-central1"
+
+# GCP zone within the region (default: us-central1-a)
+zone = "us-central1-a"
+
+# Subnet CIDR for cluster nodes (default: 10.10.0.0/20)
+subnet_cidr = "10.10.0.0/20"
+
+# Cloud SQL machine type tier
+# For development: db-g1-small (~$30/month)
+# For production: db-custom-2-7680 or higher
+postgres_tier = "db-g1-small"
+
+# Memorystore Redis memory size in GB
+# For development: 1 GB (~$10/month)
+# For production: 4 GB or more
+redis_memory_gb = 1
+
+# Use spot GPU nodes for L4 GPU pool
+# true  = spot instances (~60% cheaper, at risk of eviction) — recommended for dev
+# false = standard on-demand instances — recommended for production
+gpu_spot = true
+
+# Enable A100-40G GPU node pool
+# Only set to true when you need 30B+ parameter models
+# Adds significant cost (~$3.06/hour on-demand, ~$0.92/hour on spot)
+enable_a100_node_pool = false

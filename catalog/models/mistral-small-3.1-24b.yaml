@@ -1,0 +1,33 @@
+id: mistral-small-3.1-24b
+name: "Mistral Small 3.1 24B Instruct"
+family: mistral
+version: "3.1"
+hfRepo: "mistralai/Mistral-Small-3.1-24B-Instruct-2503"
+hfRevision: "main"
+# Placeholder SHA256 - real value computed during weight verification
+weightDigestSha256: "f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1"
+license: apache-2.0
+parameterCount: "24B"
+minGPUClass: a100-40g
+maxContextLen: 131072
+recommendedVLLMArgs:
+  - "--max-model-len=32768"
+  - "--dtype=bfloat16"
+  - "--tensor-parallel-size=2"
+  - "--tokenizer-mode=mistral"
+  - "--gpu-memory-utilization=0.90"
+description: |
+  Mistral AI's Mistral Small 3.1 24B is a best-in-class multilingual instruction
+  model with a 128K context window, vision inputs, and support for 30+ languages.
+  Natively optimised for vLLM serving. Apache 2.0 licensed. Ideal for production
+  multilingual deployments and long-document tasks.
+tags:
+  - instruction-tuned
+  - multilingual
+  - vision
+  - long-context
+  - vllm-native
+  - mistral3
+commercialUse: true
+addedAt: 2026-05-01
+addedBy: openserve-bot

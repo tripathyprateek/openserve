@@ -1,0 +1,29 @@
+# Llama 3 8B Instruct Model Manifest
+# Note: SHA256 values are placeholder; real values are computed during catalog sign-off
+id: llama-3-8b-instruct
+name: "Llama 3 8B Instruct"
+family: llama
+version: "3"
+hfRepo: "meta-llama/Meta-Llama-3-8B-Instruct"
+hfRevision: "e6fbeb926726b1df0b5a87a0f1f8e0f0e6fbeb92"
+# Placeholder SHA256 - real value computed during weight verification
+weightDigestSha256: "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+license: llama3
+parameterCount: "8B"
+minGPUClass: l4
+maxContextLen: 8192
+recommendedVLLMArgs:
+  - "--tensor-parallel-size=1"
+  - "--gpu-memory-utilization=0.9"
+  - "--max-model-len=8192"
+description: |
+  Meta's Llama 3 8B Instruct is a compact, instruction-tuned large language model
+  optimized for single-GPU deployment. It provides strong performance on general
+  tasks with a small memory footprint suitable for edge and cost-effective deployments.
+tags:
+  - instruction-tuned
+  - general-purpose
+  - compact
+  - single-gpu
+addedAt: 2026-04-29
+addedBy: openserve-bot

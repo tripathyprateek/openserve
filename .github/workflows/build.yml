@@ -1,0 +1,222 @@
+name: "Build & Test"
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  lint-go:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        module: [operator, apps/control-api, apps/gateway]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go 1.22
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Lint Go code
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.57.2
+          working-directory: ${{ matrix.module }}
+
+  test-go:
+    needs: lint-go
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        module: [operator, apps/control-api, apps/gateway]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go 1.22
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Run tests with coverage
+        run: go test ./... -race -coverprofile=coverage.txt
+        working-directory: ${{ matrix.module }}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./${{ matrix.module }}/coverage.txt
+          flags: go-${{ matrix.module }}
+
+  lint-gui:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        working-directory: apps/gui
+
+      - name: Type check
+        run: pnpm typecheck
+        working-directory: apps/gui
+
+      - name: Lint
+        run: pnpm lint
+        working-directory: apps/gui
+
+  build-images:
+    needs: [test-go, lint-gui]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        component: [operator, control-api, gateway, gui]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Compute image tag
+        id: image-tag
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=sha-${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set Dockerfile path
+        id: dockerfile
+        run: |
+          if [[ "${{ matrix.component }}" == "operator" ]]; then
+            echo "path=operator/Dockerfile" >> $GITHUB_OUTPUT
+          else
+            echo "path=apps/${{ matrix.component }}/Dockerfile" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          push: true
+          tags: ghcr.io/openserve/openserve-${{ matrix.component }}:${{ steps.image-tag.outputs.tag }}
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image with Cosign
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+        run: |
+          cosign sign --yes ghcr.io/openserve/openserve-${{ matrix.component }}@${{ steps.build.outputs.digest }}
+
+  catalog-lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate catalog - no placeholder digests
+        run: |
+          import os
+          import re
+
+          catalog_dir = "catalog/models"
+
+          def is_placeholder_digest(digest):
+              """
+              Check if a digest is a placeholder by verifying it's composed entirely
+              of cyclic shifts of the pattern "a1b2c3d4e5f6".
+              """
+              if len(digest) != 64:
+                  return False
+
+              base_pattern = "a1b2c3d4e5f6"
+              # Repeat pattern enough to cover all cyclic shifts of 64 chars
+              long_pattern = base_pattern * 6  # 72 chars
+              return digest in long_pattern
+
+          placeholder_files = []
+
+          # Check all .yaml files in catalog/models/
+          for filename in os.listdir(catalog_dir):
+              if not filename.endswith(".yaml"):
+                  continue
+
+              filepath = os.path.join(catalog_dir, filename)
+              with open(filepath, 'r') as f:
+                  content = f.read()
+
+              # Find weightDigestSha256 line and extract value
+              for line in content.split('\n'):
+                  if 'weightDigestSha256:' in line:
+                      match = re.search(r'weightDigestSha256:\s*"([^"]+)"', line)
+                      if match:
+                          digest = match.group(1)
+                          if is_placeholder_digest(digest):
+                              placeholder_files.append(f"{filename}")
+                      break
+
+          if placeholder_files:
+              print("ERROR: Found placeholder weightDigestSha256 values in:")
+              for f in sorted(placeholder_files):
+                  print(f"  - {f}")
+              exit(1)
+          else:
+              print("✓ All catalog files have valid (non-placeholder) digests")
+        shell: python
+
+  helm-lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm 3.14
+        uses: azure/setup-helm@v3
+        with:
+          version: "3.14"
+
+      - name: Update Helm dependencies
+        run: helm dependency update charts/openserve
+
+      - name: Lint Helm chart
+        run: |
+          helm lint charts/openserve \
+            --set domain=test.example.com,google.clientId=test,postgres.host=1.2.3.4,redis.host=1.2.3.5,gcs.bucket=test-bucket
+
+      - name: Template and validate Helm chart
+        run: |
+          helm template charts/openserve \
+            --set domain=test.example.com,google.clientId=test,postgres.host=1.2.3.4,redis.host=1.2.3.5,gcs.bucket=test-bucket \
+            | kubectl apply --dry-run=client -f -

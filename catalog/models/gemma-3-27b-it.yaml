@@ -1,0 +1,32 @@
+id: gemma-3-27b-it
+name: "Gemma 3 27B Instruct"
+family: gemma
+version: "3"
+hfRepo: "google/gemma-3-27b-it"
+hfRevision: "main"
+# Placeholder SHA256 - real value computed during weight verification
+weightDigestSha256: "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3"
+license: gemma
+parameterCount: "27B"
+minGPUClass: a100-40g
+maxContextLen: 131072
+recommendedVLLMArgs:
+  - "--max-model-len=32768"
+  - "--dtype=bfloat16"
+  - "--tensor-parallel-size=2"
+  - "--gpu-memory-utilization=0.90"
+description: |
+  Google's Gemma 3 27B Instruct is the flagship model in the Gemma 3 family. It
+  supports multimodal inputs (text + vision), a 128K context window, and delivers
+  state-of-the-art performance for an open model at this scale. Ideal for complex
+  instruction following, long-document analysis, and vision tasks.
+tags:
+  - instruction-tuned
+  - multimodal
+  - vision
+  - long-context
+  - reasoning
+  - gemma3
+commercialUse: true
+addedAt: 2026-05-01
+addedBy: openserve-bot

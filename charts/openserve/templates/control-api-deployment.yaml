@@ -1,0 +1,106 @@
+{{- include "openserve.validateRequired" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openserve.fullname" . }}-control-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: control-api
+spec:
+  replicas: {{ .Values.controlApi.replicas }}
+  selector:
+    matchLabels:
+      {{- include "openserve.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: control-api
+  template:
+    metadata:
+      labels:
+        {{- include "openserve.labels" . | nindent 8 }}
+        app.kubernetes.io/component: control-api
+      annotations:
+        kubectl.kubernetes.io/default-container: control-api
+    spec:
+      serviceAccountName: {{ include "openserve.serviceAccountName" . }}-control-api
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: control-api
+          image: {{ include "openserve.controlApiImage" . }}
+          imagePullPolicy: {{ .Values.controlApi.image.pullPolicy }}
+          args:
+            - --addr=:8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: POSTGRES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.secret }}
+                  key: host
+            - name: POSTGRES_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.secret }}
+                  key: port
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.secret }}
+                  key: database
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.secret }}
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.secret }}
+                  key: password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.controlApi.jwtSecret }}
+                  key: signing-key
+            - name: GOOGLE_CLIENT_ID
+              value: {{ .Values.google.clientId | quote }}
+            - name: GOOGLE_HOSTED_DOMAIN
+              value: {{ .Values.google.hostedDomain | quote }}
+            - name: GCP_PROJECT
+              value: {{ .Values.billing.gcpProject | quote }}
+            - name: BQ_DATASET
+              value: {{ .Values.billing.bigqueryDataset | quote }}
+            - name: CATALOG_URL
+              value: {{ .Values.catalog.url | quote }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.controlApi.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      terminationGracePeriodSeconds: 30

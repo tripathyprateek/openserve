@@ -1,0 +1,31 @@
+id: phi-4
+name: "Microsoft Phi-4"
+family: phi
+version: "4"
+hfRepo: "microsoft/phi-4"
+hfRevision: "main"
+# Placeholder SHA256 - real value computed during weight verification
+weightDigestSha256: "d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5"
+license: mit
+parameterCount: "14B"
+minGPUClass: l4
+maxContextLen: 16384
+recommendedVLLMArgs:
+  - "--max-model-len=16384"
+  - "--dtype=bfloat16"
+  - "--gpu-memory-utilization=0.90"
+description: |
+  Microsoft's Phi-4 is a 14B parameter model that dramatically outperforms
+  models 2-4x its size on math, science, and coding benchmarks. Trained on
+  high-quality synthetic data, it is particularly strong at multi-step reasoning
+  and problem-solving. MIT licensed. Runs on a single L4 GPU.
+tags:
+  - instruction-tuned
+  - math
+  - coding
+  - reasoning
+  - efficient
+  - phi
+commercialUse: true
+addedAt: 2026-05-01
+addedBy: openserve-bot

@@ -1,0 +1,80 @@
+{{- include "openserve.validateRequired" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "openserve.fullname" . }}-operator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "openserve.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: operator
+  template:
+    metadata:
+      labels:
+        {{- include "openserve.labels" . | nindent 8 }}
+        app.kubernetes.io/component: operator
+      annotations:
+        kubectl.kubernetes.io/default-container: operator
+    spec:
+      serviceAccountName: {{ include "openserve.serviceAccountName" . }}-operator
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: operator
+          image: {{ include "openserve.operatorImage" . }}
+          imagePullPolicy: {{ .Values.operator.image.pullPolicy }}
+          command:
+            - /manager
+          args:
+            - --leader-elect
+            - --catalog-url={{ .Values.catalog.url }}
+            - --model-cache-bucket={{ .Values.gcs.bucket }}
+            - --gateway-domain={{ .Values.domain }}
+            - --bigquery-dataset={{ .Values.billing.bigqueryDataset }}
+            - --zap-log-level={{ .Values.operator.logLevel }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.operator.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          ports:
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
+            - name: health
+              containerPort: 8081
+              protocol: TCP
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      terminationGracePeriodSeconds: 10

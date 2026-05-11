@@ -1,0 +1,115 @@
+---
+# Deny all traffic by default in openserve-system; allow explicitly below.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: ["Ingress", "Egress"]
+---
+# Control API: allow ingress from GUI, egress to Postgres/Redis/K8s API.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: control-api-policy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: control-api
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: control-api
+  policyTypes: ["Ingress", "Egress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: gui
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    # Postgres (Cloud SQL private IP)
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.postgres.port }}
+    # Redis (Memorystore private IP)
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.redis.port }}
+    # Kubernetes API server
+    - ports:
+        - protocol: TCP
+          port: 443
+    # GCP APIs (Secret Manager, BigQuery, etc.) via private Google access
+    - ports:
+        - protocol: TCP
+          port: 443
+---
+# Gateway: allow ingress from Load Balancer, egress to vLLM pods and Redis.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway-policy
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+  policyTypes: ["Ingress", "Egress"]
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    # vLLM pods in the inference namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.inferenceNamespace }}
+      ports:
+        - protocol: TCP
+          port: 8000
+    # Redis for rate-limit counters
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.redis.port }}
+    # Postgres for API key lookup
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.postgres.port }}
+---
+# vLLM pods: deny all egress except to GCS (model weights via FUSE CSI) and metrics scraper.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: inference-deny-egress
+  namespace: {{ .Values.inferenceNamespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/managed-by: openserve-operator
+  policyTypes: ["Egress"]
+  egress:
+    # GCS FUSE CSI and Google APIs (private Google access endpoint: 199.36.153.x)
+    - to:
+        - ipBlock:
+            cidr: 199.36.153.8/30
+      ports:
+        - protocol: TCP
+          port: 443
+    # Prometheus metrics scraper in openserve-system
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Release.Namespace }}

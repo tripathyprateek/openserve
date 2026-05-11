@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>openserve — BYOC LLM Serving Platform</title>
+  <meta name="description" content="Deploy open-source LLMs inside your own cloud. OpenAI-compatible API. Scale to zero. Hard budget caps. No prompts leave your VPC." />
+  <meta property="og:title" content="openserve — BYOC LLM Serving Platform" />
+  <meta property="og:description" content="Deploy open-source LLMs inside your own cloud. OpenAI-compatible API. Scale to zero. Hard budget caps." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080810;
+      --bg-card:   #0f0f1a;
+      --bg-subtle: #13131f;
+      --border:    rgba(255,255,255,0.07);
+      --text:      #e2e2f0;
+      --muted:     #6b6b8a;
+      --accent:    #7c6af7;
+      --accent-2:  #22d3ee;
+      --green:     #34d399;
+      --red:       #f87171;
+      --font:      'Inter', system-ui, sans-serif;
+      --mono:      'JetBrains Mono', 'Fira Code', monospace;
+      --radius:    10px;
+      --max-w:     1080px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Nav ─────────────────────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(16px);
+      background: rgba(8,8,16,0.85);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .nav-logo span { color: var(--accent); }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13.5px;
+      transition: color .15s;
+    }
+    nav a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--accent);
+      color: #fff !important;
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-weight: 500 !important;
+      font-size: 13px !important;
+      transition: opacity .15s !important;
+    }
+    .nav-cta:hover { opacity: .85; }
+
+    /* ── Shared layout ───────────────────────────────────────────────────── */
+    section {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 96px 24px;
+    }
+    section.full-bleed {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
+    .label {
+      font-size: 11.5px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    h1, h2, h3 { line-height: 1.25; letter-spacing: -0.4px; }
+    h1 { font-size: clamp(36px, 5vw, 58px); font-weight: 600; }
+    h2 { font-size: clamp(26px, 3.5vw, 38px); font-weight: 600; margin-bottom: 16px; }
+    h3 { font-size: 17px; font-weight: 500; margin-bottom: 8px; }
+    p { color: var(--muted); max-width: 580px; }
+    p.wide { max-width: 100%; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Hero ────────────────────────────────────────────────────────────── */
+    #hero {
+      padding: 120px 24px 100px;
+      text-align: center;
+    }
+    #hero .label { display: inline-block; margin-bottom: 20px; }
+    #hero h1 { margin-bottom: 22px; }
+    #hero h1 em { font-style: normal; color: var(--accent); }
+    #hero p { margin: 0 auto 40px; font-size: 17px; max-width: 540px; }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      text-decoration: none !important;
+    }
+    .btn:hover { opacity: .88; transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* glow behind hero */
+    .hero-glow {
+      position: absolute;
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(124,106,247,.18) 0%, transparent 70%);
+      top: 80px; left: 50%; transform: translateX(-50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    #hero { position: relative; overflow: hidden; }
+
+    .hero-cmd {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 48px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+    }
+    .hero-cmd .dollar { color: var(--accent); user-select: none; }
+    .hero-cmd .copy-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      transition: color .15s;
+      font-size: 12px;
+    }
+    .hero-cmd .copy-btn:hover { color: var(--text); }
+
+    /* ── Ticker / badges ─────────────────────────────────────────────────── */
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 36px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+    .badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+    }
+    .dot-green { background: var(--green); }
+    .dot-blue  { background: var(--accent-2); }
+    .dot-purple{ background: var(--accent); }
+
+    /* ── How it works ────────────────────────────────────────────────────── */
+    #how { background: var(--bg-subtle); }
+    #how > section { padding: 96px 24px; }
+
+    .flow {
+      margin-top: 56px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .flow-step {
+      background: var(--bg-subtle);
+      padding: 28px 24px;
+    }
+    .flow-step .num {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .flow-step h3 { font-size: 15px; color: var(--text); }
+    .flow-step p  { font-size: 13.5px; margin-top: 6px; }
+
+    /* ── Architecture diagram ────────────────────────────────────────────── */
+    .arch-box {
+      margin-top: 48px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.9;
+      color: var(--muted);
+      overflow-x: auto;
+    }
+    .arch-box .hl  { color: var(--accent-2); }
+    .arch-box .hl2 { color: var(--accent); }
+    .arch-box .hl3 { color: var(--green); }
+
+    /* ── Features ────────────────────────────────────────────────────────── */
+    .feature-grid {
+      margin-top: 56px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color .2s;
+    }
+    .feature-card:hover { border-color: rgba(124,106,247,.4); }
+    .feature-icon {
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+    .feature-card p { font-size: 13.5px; margin-top: 6px; }
+
+    /* ── Quick start ─────────────────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: var(--font);
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 10px 18px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    pre {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding: 24px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.8;
+      overflow-x: auto;
+      color: #c9d1d9;
+    }
+    .code-wrap { margin-top: 32px; }
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 10px 16px;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--muted);
+    }
+    .copy-code {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 3px 10px;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .copy-code:hover { color: var(--text); border-color: var(--accent); }
+
+    /* syntax colour helpers */
+    .cm { color: #6e7681; }     /* comment */
+    .ck { color: #ff7b72; }     /* keyword */
+    .cs { color: #a5d6ff; }     /* string */
+    .cv { color: #ffa657; }     /* variable */
+    .cx { color: #7ee787; }     /* value/ok */
+
+    /* ── Security callouts ───────────────────────────────────────────────── */
+    .security-grid {
+      margin-top: 56px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .sec-card {
+      display: flex;
+      gap: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+    .sec-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+    .sec-card h3 { font-size: 14px; }
+    .sec-card p  { font-size: 13px; margin-top: 4px; }
+
+    /* ── Comparison table ────────────────────────────────────────────────── */
+    .comparison-wrap {
+      margin-top: 48px;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    thead th {
+      background: var(--bg-card);
+      padding: 14px 20px;
+      text-align: left;
+      font-weight: 500;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    thead th:first-child { color: var(--text); }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover td { background: var(--bg-subtle); }
+    tbody td {
+      padding: 13px 20px;
+      color: var(--muted);
+      vertical-align: top;
+    }
+    tbody td:first-child { color: var(--text); font-weight: 500; }
+    .yes { color: var(--green); }
+    .no  { color: var(--red); }
+    .part{ color: #fbbf24; }
+
+    /* ── Models ──────────────────────────────────────────────────────────── */
+    .model-grid {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+    .model-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      transition: border-color .2s;
+    }
+    .model-card:hover { border-color: rgba(124,106,247,.4); }
+    .model-card .model-name {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .model-card .model-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .model-tag {
+      display: inline-block;
+      background: rgba(124,106,247,.15);
+      color: var(--accent);
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 11px;
+      margin-top: 8px;
+    }
+    .model-tag.cyan {
+      background: rgba(34,211,238,.12);
+      color: var(--accent-2);
+    }
+
+    /* ── CTA ─────────────────────────────────────────────────────────────── */
+    #cta {
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+    #cta p { margin: 0 auto 36px; font-size: 17px; max-width: 480px; }
+
+    /* ── Footer ──────────────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .footer-inner {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 40px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .footer-logo {
+      font-family: var(--mono);
+      font-size: 15px;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .footer-logo span { color: var(--accent); }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .footer-links a { color: var(--muted); font-size: 13px; }
+    .footer-links a:hover { color: var(--text); text-decoration: none; }
+    .footer-note { font-size: 12px; color: var(--muted); }
+
+    /* ── Dividers ────────────────────────────────────────────────────────── */
+    .section-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* ── Scroll animation ────────────────────────────────────────────────── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity .5s ease, transform .5s ease;
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      nav ul .hide-mobile { display: none; }
+      .flow { grid-template-columns: 1fr; }
+      .arch-box { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="#"><span>open</span>serve</a>
+    <ul>
+      <li class="hide-mobile"><a href="#features">Features</a></li>
+      <li class="hide-mobile"><a href="#quickstart">Quick start</a></li>
+      <li class="hide-mobile"><a href="#models">Models</a></li>
+      <li class="hide-mobile"><a href="#security">Security</a></li>
+      <li><a href="manual.html" class="hide-mobile">Docs</a></li>
+      <li><a href="https://github.com/openserve/openserve" class="nav-cta" target="_blank" rel="noopener">GitHub →</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+<div id="hero">
+  <div class="hero-glow"></div>
+  <div class="label">Open-source · Apache 2.0</div>
+  <h1>Deploy LLMs inside<br/><em>your own cloud</em></h1>
+  <p>OpenAI-compatible inference that never leaves your VPC. Scale to zero. Hard budget caps. Ship in 5 minutes.</p>
+
+  <div class="hero-actions">
+    <a href="#quickstart" class="btn btn-primary">Get started</a>
+    <a href="https://github.com/openserve/openserve" class="btn btn-outline" target="_blank" rel="noopener">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      Star on GitHub
+    </a>
+  </div>
+
+  <div style="max-width:540px;margin:0 auto;">
+    <div class="hero-cmd">
+      <span class="dollar">$</span>
+      <span>helm install openserve openserve/openserve --set domain=ai.acme.com</span>
+      <button class="copy-btn" onclick="copyHeroCmd(this)" title="Copy">copy</button>
+    </div>
+  </div>
+
+  <div class="badges">
+    <span class="badge"><span class="dot dot-green"></span>Scale to zero</span>
+    <span class="badge"><span class="dot dot-purple"></span>OpenAI-compatible API</span>
+    <span class="badge"><span class="dot dot-blue"></span>Hard budget caps</span>
+    <span class="badge"><span class="dot dot-green"></span>Prompts stay in your VPC</span>
+    <span class="badge"><span class="dot dot-purple"></span>Rate limiting per key</span>
+  </div>
+</div>
+
+<hr class="section-divider" />
+
+<!-- ── How it works ──────────────────────────────────────────────────────── -->
+<div id="how" class="full-bleed">
+<section>
+  <div class="fade-up">
+    <div class="label">How it works</div>
+    <h2>One Helm install.<br/>Everything else is automatic.</h2>
+    <p>openserve reconciles your intent — declared as Kubernetes CRDs — into GPU pods, routes, rate limits, and budget guardrails. You manage the what; openserve handles the how.</p>
+  </div>
+
+  <div class="flow fade-up">
+    <div class="flow-step">
+      <div class="num">01</div>
+      <h3>helm install</h3>
+      <p>Deploy the operator, gateway, control-api, and GUI into your existing GKE cluster. Connects to your Cloud SQL, Redis, and GCS bucket.</p>
+    </div>
+    <div class="flow-step">
+      <div class="num">02</div>
+      <h3>Browse catalog</h3>
+      <p>Pick from 25+ vetted open-source models — Llama 3, Mistral, Phi-3, Gemma, Qwen, and more. Weights are cosign-verified before the pod starts.</p>
+    </div>
+    <div class="flow-step">
+      <div class="num">03</div>
+      <h3>Deploy a model</h3>
+      <p>One click (or one API call). The operator provisions a vLLM pod on a GPU node, hooks KEDA for scale-to-zero, and exposes a ClusterIP service.</p>
+    </div>
+    <div class="flow-step">
+      <div class="num">04</div>
+      <h3>Create an API key</h3>
+      <p>Generate scoped keys with RPM + TPM rate limits, optional expiry, and IP allowlist. Argon2id-hashed — the raw value is shown once.</p>
+    </div>
+    <div class="flow-step">
+      <div class="num">05</div>
+      <h3>Call the model</h3>
+      <p>Point any OpenAI SDK at your domain. The gateway validates the key, enforces limits, and streams the response — all inside your VPC.</p>
+    </div>
+  </div>
+
+  <div class="arch-box fade-up">
+<pre style="background:none;border:none;padding:0;font-size:12.5px;">
+<span class="hl">Internet</span> → Cloud Armor → Load Balancer → <span class="hl2">openserve-gateway</span>
+                                                    │
+                          ┌─────────────────────────┴──────────────────────────┐
+                          │  1. validate API key  (Postgres / Argon2id)        │
+                          │  2. check rate limits (Redis sliding window)       │
+                          │  3. prefix-cache route (FNV-1a consistent hash)    │
+                          │  4. reverse-proxy     (SSE streaming, no buffer)   │
+                          └────────────────────────────────────────────────────┘
+                                                    │
+                                         <span class="hl3">vllm-&lt;model-id&gt; pod</span>
+                                         (openserve-inference namespace)
+                                         scale 0 → N via KEDA
+</pre>
+  </div>
+</section>
+</div>
+
+<hr class="section-divider" />
+
+<!-- ── Features ──────────────────────────────────────────────────────────── -->
+<section id="features">
+  <div class="fade-up">
+    <div class="label">Features</div>
+    <h2>Everything you need.<br/>Nothing you don't.</h2>
+  </div>
+
+  <div class="feature-grid fade-up">
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <h3>Data sovereignty</h3>
+      <p>Every prompt and response stays inside your GCP VPC. No data flows to any third-party inference provider — ever.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Scale to zero</h3>
+      <p>KEDA watches <code>vllm_num_requests_running</code>. Idle deployments automatically scale to 0 replicas and cold-start on the next request.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💰</div>
+      <h3>Hard budget caps</h3>
+      <p>Set a <code>BudgetPolicy</code> with a daily USD ceiling. When spend exceeds the cap, the operator automatically scales replicas to 0 and pauses the deployment.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔑</div>
+      <h3>Per-key rate limits</h3>
+      <p>Each API key has independent RPM and TPM counters via a Redis sliding-window. Actual token counts (not just request counts) are tracked post-stream.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤝</div>
+      <h3>OpenAI-compatible</h3>
+      <p>Point any <code>openai</code> SDK at your domain by setting <code>base_url</code>. Drop-in replacement for existing LLM integrations.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔄</div>
+      <h3>LoRA adapters</h3>
+      <p>Hot-load fine-tuned LoRA adapters into a running vLLM pod without redeployment. List them in <code>spec.loraAdapters</code> on any ModelDeployment.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <h3>Prefix-cache routing</h3>
+      <p>The gateway hashes the system prompt and uses consistent hashing to route requests to the same pod — maximising the KV cache hit rate.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔍</div>
+      <h3>Built-in RAG</h3>
+      <p>Upload documents via the control-api. Embeddings are stored in pgvector (IVFFlat index, cosine similarity) and retrieved at query time.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3>Immutable audit log</h3>
+      <p>Every action is append-only in Postgres, mirrored to a Cloud Logging bucket with bucket lock. Monthly hash-chain anchors prevent retroactive tampering.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔌</div>
+      <h3>Multi-engine support</h3>
+      <p>Set <code>spec.engine: sglang</code> on any ModelDeployment to use SGLang instead of vLLM — recommended for structured generation and long-context workloads.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌐</div>
+      <h3>Multi-provider OIDC</h3>
+      <p>Set <code>OIDC_ISSUER_URL</code> to any RFC 8414 provider — Google Workspace, Okta, Azure AD, or GitHub Actions. No code changes required.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔗</div>
+      <h3>Peer relay</h3>
+      <p>Connect external partner inference nodes via WebSocket. Route requests to partner-hosted models through a dedicated peer-relay service.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ── Quick start ────────────────────────────────────────────────────────── -->
+<section id="quickstart">
+  <div class="fade-up">
+    <div class="label">Quick start</div>
+    <h2>From zero to inference<br/>in under 5 minutes.</h2>
+  </div>
+
+  <div class="fade-up" style="margin-top:40px;">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab(this,'tab-install')">1 · Install</button>
+      <button class="tab-btn" onclick="switchTab(this,'tab-deploy')">2 · Deploy model</button>
+      <button class="tab-btn" onclick="switchTab(this,'tab-key')">3 · Create key</button>
+      <button class="tab-btn" onclick="switchTab(this,'tab-call')">4 · Call the API</button>
+      <button class="tab-btn" onclick="switchTab(this,'tab-local')">Local dev</button>
+    </div>
+
+    <div id="tab-install" class="tab-panel active">
+      <div class="code-header">
+        <span>bash — Helm install</span>
+        <button class="copy-code" onclick="copyBlock('block-install')">copy</button>
+      </div>
+      <pre id="block-install"><span class="cm"># Add the Helm repo</span>
+helm repo add openserve https://charts.openserve.io
+helm repo update
+
+<span class="cm"># Install into your GKE cluster</span>
+helm install openserve openserve/openserve \
+  --namespace openserve-system --create-namespace \
+  --set domain=<span class="cv">ai.acme.com</span> \
+  --set google.clientId=<span class="cv">123456789.apps.googleusercontent.com</span> \
+  --set postgres.host=<span class="cv">10.0.0.5</span> \
+  --set postgres.secret=<span class="cv">openserve-postgres-secret</span> \
+  --set redis.host=<span class="cv">10.0.0.6</span> \
+  --set gcs.bucket=<span class="cv">acme-openserve-models</span> \
+  --set billing.bigqueryDataset=<span class="cv">openserve_usage</span>
+
+<span class="cm"># Browse to https://ai.acme.com and sign in with Google Workspace</span></pre>
+    </div>
+
+    <div id="tab-deploy" class="tab-panel">
+      <div class="code-header">
+        <span>bash — Deploy Llama 3 8B via API</span>
+        <button class="copy-code" onclick="copyBlock('block-deploy')">copy</button>
+      </div>
+      <pre id="block-deploy"><span class="cm"># One click from the GUI: Catalog → Llama 3 8B Instruct → Deploy
+# Or via the control-api REST endpoint:</span>
+
+curl -X POST https://<span class="cv">ai.acme.com</span>/api/v1/deployments \
+  -H <span class="cs">"Authorization: Bearer $ADMIN_TOKEN"</span> \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -d <span class="cs">'{
+    "modelRef": "llama-3-8b-instruct",
+    "gpuClass": "l4",
+    "scaleToZero": true,
+    "idleTimeoutMin": 10,
+    "maxReplicas": 2,
+    "budget": {"dailyUsdCap": "50"},
+    "limits": {"maxInputTokens": 8192, "maxOutputTokens": 4096}
+  }'</span>
+
+<span class="cm"># Poll until phase=Running (typically 2–4 min while weights download)</span>
+curl https://<span class="cv">ai.acme.com</span>/api/v1/deployments/<span class="cv">&lt;id&gt;</span> \
+  -H <span class="cs">"Authorization: Bearer $ADMIN_TOKEN"</span> | jq .status.phase</pre>
+    </div>
+
+    <div id="tab-key" class="tab-panel">
+      <div class="code-header">
+        <span>bash — Create a scoped API key</span>
+        <button class="copy-code" onclick="copyBlock('block-key')">copy</button>
+      </div>
+      <pre id="block-key"><span class="cm"># Create a key — raw value shown once, Argon2id-hashed at rest</span>
+curl -X POST https://<span class="cv">ai.acme.com</span>/api/v1/keys \
+  -H <span class="cs">"Authorization: Bearer $ADMIN_TOKEN"</span> \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -d <span class="cs">'{"displayName": "prod-app-key"}'</span>
+
+<span class="cm"># Response:</span>
+<span class="cx">{
+  "key": "openserve_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "id":  "01HXY..."
+}</span>
+
+<span class="cm"># Save the key — it will NOT be shown again.</span>
+<span class="cm"># Default limits: 60 RPM, 100,000 TPM.  Adjust in the GUI or PATCH /api/v1/keys/:id</span></pre>
+    </div>
+
+    <div id="tab-call" class="tab-panel">
+      <div class="code-header">
+        <span>bash / python — Call the OpenAI-compatible API</span>
+        <button class="copy-code" onclick="copyBlock('block-call')">copy</button>
+      </div>
+      <pre id="block-call"><span class="cm"># curl (streaming SSE)</span>
+curl https://<span class="cv">ai.acme.com</span>/inference/llama-3-8b-instruct/v1/chat/completions \
+  -H <span class="cs">"Authorization: Bearer openserve_live_xxx"</span> \
+  -H <span class="cs">"Content-Type: application/json"</span> \
+  -d <span class="cs">'{
+    "model": "llama-3-8b-instruct",
+    "messages": [{"role":"user","content":"Explain BYOC in one sentence."}],
+    "stream": true
+  }'</span>
+
+<span class="cm"># Python — drop-in OpenAI SDK usage</span>
+<span class="ck">from</span> openai <span class="ck">import</span> OpenAI
+
+client = OpenAI(
+    base_url=<span class="cs">"https://ai.acme.com/inference/llama-3-8b-instruct"</span>,
+    api_key=<span class="cs">"openserve_live_xxx"</span>,
+)
+response = client.chat.completions.create(
+    model=<span class="cs">"llama-3-8b-instruct"</span>,
+    messages=[{<span class="cs">"role"</span>: <span class="cs">"user"</span>, <span class="cs">"content"</span>: <span class="cs">"Hello!"</span>}],
+    stream=<span class="ck">True</span>,
+)
+<span class="ck">for</span> chunk <span class="ck">in</span> response:
+    <span class="ck">print</span>(chunk.choices[0].delta.content, end=<span class="cs">""</span>, flush=<span class="ck">True</span>)</pre>
+    </div>
+
+    <div id="tab-local" class="tab-panel">
+      <div class="code-header">
+        <span>bash — Local development (Docker Compose)</span>
+        <button class="copy-code" onclick="copyBlock('block-local')">copy</button>
+      </div>
+      <pre id="block-local"><span class="cm"># Clone and run the full stack locally (no Kubernetes required)</span>
+git clone https://github.com/openserve/openserve
+cd openserve
+
+cp .env.dev.example .env.dev   <span class="cm"># DEV_EMAIL=dev@localhost is already set</span>
+
+docker compose --env-file .env.dev up --build
+
+<span class="cm"># The mock-vllm service simulates a real inference backend</span>
+<span class="cm"># Ports: control-api :8080 · gateway :8081 · GUI :3000 · mock-vllm :8000</span>
+
+<span class="cm"># Run the end-to-end demo (catalog → key → inference → rate-limit → audit)</span>
+bash hack/local-demo.sh</pre>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ── Models ─────────────────────────────────────────────────────────────── -->
+<section id="models" style="background:none;">
+  <div class="fade-up">
+    <div class="label">Model catalog</div>
+    <h2>25+ curated models,<br/>ready to deploy.</h2>
+    <p>All models are cosign-verified against SHA256 manifest signatures before the inference pod starts. No mystery weights.</p>
+  </div>
+
+  <div class="model-grid fade-up">
+    <div class="model-card">
+      <div class="model-name">Llama 3.1 70B Instruct</div>
+      <div class="model-meta">Meta · 70B params · A100-40G</div>
+      <span class="model-tag">chat</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Llama 3 8B Instruct</div>
+      <div class="model-meta">Meta · 8B params · L4</div>
+      <span class="model-tag">chat</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Mistral 7B Instruct v0.3</div>
+      <div class="model-meta">Mistral AI · 7B params · L4</div>
+      <span class="model-tag">chat</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Mixtral 8×7B Instruct</div>
+      <div class="model-meta">Mistral AI · MoE · A100-40G</div>
+      <span class="model-tag">chat</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Phi-3 Mini Instruct</div>
+      <div class="model-meta">Microsoft · 3.8B params · L4</div>
+      <span class="model-tag">chat</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Phi-3 Medium Instruct</div>
+      <div class="model-meta">Microsoft · 14B params · L4</div>
+      <span class="model-tag">chat</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Gemma 2 9B Instruct</div>
+      <div class="model-meta">Google · 9B params · L4</div>
+      <span class="model-tag">chat</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Gemma 2 27B Instruct</div>
+      <div class="model-meta">Google · 27B params · A100-40G</div>
+      <span class="model-tag">chat</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Qwen2.5 72B Instruct</div>
+      <div class="model-meta">Alibaba · 72B params · A100-80G</div>
+      <span class="model-tag">chat</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">DeepSeek-R1 Distill 8B</div>
+      <div class="model-meta">DeepSeek · 8B params · L4</div>
+      <span class="model-tag">reasoning</span>
+    </div>
+    <div class="model-card">
+      <div class="model-name">Nomic Embed Text v1.5</div>
+      <div class="model-meta">Nomic · 137M params · L4</div>
+      <span class="model-tag cyan">embedding</span>
+    </div>
+    <div class="model-card" style="display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;">
+      +14 more →
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ── Security ───────────────────────────────────────────────────────────── -->
+<section id="security" style="background:var(--bg-subtle);">
+  <div class="fade-up">
+    <div class="label">Security</div>
+    <h2>Built for compliance<br/>from day one.</h2>
+    <p>openserve is designed to help teams achieve SOC 2, HIPAA, and FedRAMP readiness — because you control the infrastructure.</p>
+  </div>
+
+  <div class="security-grid fade-up">
+    <div class="sec-card">
+      <div class="sec-icon">🔐</div>
+      <div>
+        <h3>Argon2id key hashing</h3>
+        <p>API key raw values are hashed with Argon2id (time=1, mem=64 MB, threads=4) and discarded. Never stored in plain text.</p>
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">✅</div>
+      <div>
+        <h3>Weight integrity</h3>
+        <p>Model weights are verified against cosign-signed SHA256 manifest entries before any inference pod starts. Supply chain attacks detected before load.</p>
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">🛡️</div>
+      <div>
+        <h3>Network isolation</h3>
+        <p>vLLM pods have a NetworkPolicy that allows egress only to GCS private access (<code>199.36.153.8/30</code>). Compromised models cannot phone home.</p>
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">📝</div>
+      <div>
+        <h3>Immutable audit log</h3>
+        <p>All actions are append-only in Postgres + Cloud Logging bucket lock. Monthly hash-chain anchors make retroactive log tampering detectable.</p>
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">🔑</div>
+      <div>
+        <h3>No static SA keys</h3>
+        <p>All GCP API access uses Workload Identity. Zero long-lived service account JSON keys in the cluster.</p>
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">🔒</div>
+      <div>
+        <h3>Private networking</h3>
+        <p>Cloud SQL and Redis use private IP only — never public endpoints. All intra-cluster traffic is mTLS via cert-manager.</p>
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">💵</div>
+      <div>
+        <h3>Budget auto-pause</h3>
+        <p>BudgetPolicy CRD polls BigQuery spend every 5 minutes. When the daily cap is breached, the operator scales replicas to 0 immediately.</p>
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">🌐</div>
+      <div>
+        <h3>CMEK encryption</h3>
+        <p>Model weights in GCS are encrypted with customer-managed encryption keys. You hold the keys — Anthropic, Google, and openserve cannot decrypt them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ── Comparison ─────────────────────────────────────────────────────────── -->
+<section id="comparison">
+  <div class="fade-up">
+    <div class="label">Comparison</div>
+    <h2>Why not just use<br/>HuggingFace Endpoints?</h2>
+    <p>HF Inference Endpoints is excellent managed-cloud SaaS. openserve is for teams that cannot send prompts to a third party.</p>
+  </div>
+
+  <div class="comparison-wrap fade-up">
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>openserve</th>
+          <th>HF Inference Endpoints</th>
+          <th>vLLM self-hosted</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Prompts stay in your VPC</td>
+          <td class="yes">✓ Always</td>
+          <td class="no">✗ HF infra</td>
+          <td class="yes">✓ Always</td>
+        </tr>
+        <tr>
+          <td>Hard daily budget cap</td>
+          <td class="yes">✓ Auto-pause</td>
+          <td class="no">✗ No</td>
+          <td class="no">✗ No</td>
+        </tr>
+        <tr>
+          <td>Per-key RPM + TPM limits</td>
+          <td class="yes">✓ Redis sliding window</td>
+          <td class="no">✗ Endpoint-level only</td>
+          <td class="no">✗ DIY</td>
+        </tr>
+        <tr>
+          <td>Scale to zero</td>
+          <td class="yes">✓ KEDA</td>
+          <td class="part">~ Some tiers</td>
+          <td class="no">✗ DIY</td>
+        </tr>
+        <tr>
+          <td>Kubernetes-native / GitOps</td>
+          <td class="yes">✓ CRDs + Helm</td>
+          <td class="no">✗ SaaS API only</td>
+          <td class="part">~ Manual YAML</td>
+        </tr>
+        <tr>
+          <td>Model weight verification</td>
+          <td class="yes">✓ cosign + SHA256</td>
+          <td class="part">~ HF-controlled</td>
+          <td class="no">✗ DIY</td>
+        </tr>
+        <tr>
+          <td>Immutable audit log</td>
+          <td class="yes">✓ Append-only + bucket lock</td>
+          <td class="no">✗ Not exposed</td>
+          <td class="no">✗ DIY</td>
+        </tr>
+        <tr>
+          <td>Open source</td>
+          <td class="yes">✓ Apache 2.0</td>
+          <td class="no">✗ Proprietary SaaS</td>
+          <td class="yes">✓ Apache 2.0</td>
+        </tr>
+        <tr>
+          <td>Setup complexity</td>
+          <td class="part">~ Helm install (~5 min)</td>
+          <td class="yes">✓ UI wizard (~2 min)</td>
+          <td class="no">✗ High (DIY everything)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="section-divider" />
+
+<!-- ── CTA ────────────────────────────────────────────────────────────────── -->
+<section id="cta">
+  <div class="fade-up">
+    <div class="label">Get started</div>
+    <h2>Your models. Your cloud.<br/>Your rules.</h2>
+    <p>Open source, Apache 2.0. Self-host in your own GCP project in under 5 minutes.</p>
+    <div class="hero-actions" style="margin-top:0;">
+      <a href="https://github.com/openserve/openserve" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
+      <a href="manual.html" class="btn btn-outline">Read the docs</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <a class="footer-logo" href="#"><span>open</span>serve</a>
+    <div class="footer-links">
+      <a href="https://github.com/openserve/openserve" target="_blank">GitHub</a>
+      <a href="manual.html">Docs</a>
+      <a href="https://github.com/openserve/openserve/blob/main/SECURITY.md">Security</a>
+      <a href="https://github.com/openserve/openserve/blob/main/LICENSE">Apache 2.0</a>
+      <a href="https://github.com/openserve/openserve/issues">Issues</a>
+    </div>
+    <span class="footer-note">Apache 2.0 — built for teams that own their data.</span>
+  </div>
+</footer>
+
+<script>
+  // ── Tab switcher ─────────────────────────────────────────────────────────
+  function switchTab(btn, panelId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(panelId).classList.add('active');
+  }
+
+  // ── Copy buttons ─────────────────────────────────────────────────────────
+  function copyBlock(id) {
+    const el = document.getElementById(id);
+    const text = el.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = el.previousElementSibling.querySelector('.copy-code');
+      if (btn) { btn.textContent = 'copied!'; setTimeout(() => btn.textContent = 'copy', 2000); }
+    });
+  }
+
+  function copyHeroCmd(btn) {
+    const cmd = btn.parentElement.textContent.replace('copy','').replace('$','').trim();
+    navigator.clipboard.writeText(cmd).then(() => {
+      btn.textContent = 'copied!';
+      setTimeout(() => btn.textContent = 'copy', 2000);
+    });
+  }
+
+  // ── Scroll fade-in ───────────────────────────────────────────────────────
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-up').forEach(el => io.observe(el));
+</script>
+</body>
+</html>

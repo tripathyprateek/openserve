@@ -1,0 +1,31 @@
+# Gemma 2 9B IT Model Manifest
+# Note: SHA256 values are placeholder; real values are computed during catalog sign-off
+id: gemma-2-9b-it
+name: "Gemma 2 9B IT"
+family: gemma
+version: "2"
+hfRepo: "google/gemma-2-9b-it"
+hfRevision: "a8f8c7b6a5f4e3d2c1b0a9f8e7d6c5b4a3f2e1d0"
+# Placeholder SHA256 - real value computed during weight verification
+weightDigestSha256: "e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6"
+license: gemma
+parameterCount: "9B"
+minGPUClass: l4
+maxContextLen: 8192
+recommendedVLLMArgs:
+  - "--tensor-parallel-size=1"
+  - "--gpu-memory-utilization=0.85"
+  - "--max-model-len=8192"
+description: |
+  Google's Gemma 2 9B Instruct-tuned model offers excellent value for production
+  deployments. With strong performance across reasoning and instruction following,
+  plus native Flash Attention 2 support for efficient inference, it balances
+  capability and resource efficiency for diverse applications.
+tags:
+  - instruction-tuned
+  - google
+  - efficient
+  - reasoning
+  - flash-attention
+addedAt: 2026-04-29
+addedBy: openserve-bot

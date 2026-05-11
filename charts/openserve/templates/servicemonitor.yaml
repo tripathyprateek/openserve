@@ -1,0 +1,19 @@
+{{- if .Values.monitoring.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "openserve.fullname" . }}-operator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: operator
+spec:
+  selector:
+    matchLabels:
+      {{- include "openserve.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: operator
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+{{- end }}

@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openserve.dev/catalog/schema.json",
+  "title": "openserve Catalog Model Manifest",
+  "description": "Schema for model manifests in the openserve catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "family",
+    "version",
+    "hfRepo",
+    "hfRevision",
+    "weightDigestSha256",
+    "license",
+    "minGPUClass"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the model (lowercase alphanumeric, hyphens, and dots)",
+      "pattern": "^[a-z0-9][a-z0-9\\-\\.]*$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name of the model"
+    },
+    "family": {
+      "type": "string",
+      "enum": ["llama", "mistral", "qwen", "gemma", "phi", "deepseek", "falcon", "other"],
+      "description": "Model family classification"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version identifier for the model (e.g., 3, 2.1)"
+    },
+    "hfRepo": {
+      "type": "string",
+      "description": "HuggingFace repository in org/repo format (e.g., meta-llama/Meta-Llama-3-8B-Instruct)"
+    },
+    "hfRevision": {
+      "type": "string",
+      "description": "Git SHA or tag for the specific model revision on HuggingFace"
+    },
+    "weightDigestSha256": {
+      "type": "string",
+      "description": "SHA256 digest of the resolved model weights archive",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "cosignManifest": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the cosign bundle for verifying model authenticity"
+    },
+    "license": {
+      "type": "string",
+      "enum": ["apache-2.0", "mit", "llama3", "llama2", "mistral", "gemma", "other"],
+      "description": "License under which the model is distributed"
+    },
+    "parameterCount": {
+      "type": "string",
+      "description": "Number of parameters (e.g., 8B, 70B)"
+    },
+    "minGPUClass": {
+      "type": "string",
+      "enum": ["l4", "a100-40g", "a100-80g"],
+      "description": "Minimum GPU class required to effectively run the model"
+    },
+    "maxContextLen": {
+      "type": "integer",
+      "description": "Maximum context length (tokens) supported by the model",
+      "minimum": 1
+    },
+    "recommendedVLLMArgs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Recommended command-line arguments for vLLM deployment"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description of the model and its capabilities"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for categorization (e.g., instruction-tuned, code, multilingual)"
+    },
+    "addedAt": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the model was added to the catalog (YYYY-MM-DD)"
+    },
+    "addedBy": {
+      "type": "string",
+      "description": "GitHub username of the maintainer who verified and added the model"
+    },
+    "modelType": {
+      "type": "string",
+      "enum": ["chat", "embedding", "rerank"],
+      "default": "chat",
+      "description": "Model capability type. 'chat' for text generation, 'embedding' for vector embeddings."
+    },
+    "embeddingDimensions": {
+      "type": "integer",
+      "description": "Output vector dimensions for embedding models (e.g. 768). Required when modelType is 'embedding'."
+    }
+  }
+}

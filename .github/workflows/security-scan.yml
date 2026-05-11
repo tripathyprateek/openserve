@@ -1,0 +1,107 @@
+name: "Security"
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Monday 00:00 UTC
+    - cron: "0 0 * * 1"
+
+permissions:
+  security-events: write
+  contents: read
+
+jobs:
+  codeql:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        language: [go, javascript]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  govulncheck:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        module: [operator, apps/control-api, apps/gateway]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go 1.22
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run govulncheck
+        working-directory: ${{ matrix.module }}
+        run: govulncheck ./...
+
+  trivy-images:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build-images
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        component: [operator, control-api, gateway, gui]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ghcr.io/openserve/openserve-${{ matrix.component }}:sha-${{ github.sha }}
+          format: sarif
+          output: trivy-${{ matrix.component }}.sarif
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-${{ matrix.component }}.sarif
+          category: trivy-${{ matrix.component }}
+
+  build-images:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        component: [operator, control-api, gateway, gui]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Set Dockerfile path
+        id: dockerfile
+        run: |
+          if [[ "${{ matrix.component }}" == "operator" ]]; then
+            echo "path=operator/Dockerfile" >> $GITHUB_OUTPUT
+          else
+            echo "path=apps/${{ matrix.component }}/Dockerfile" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ steps.dockerfile.outputs.path }}
+          push: true
+          tags: ghcr.io/openserve/openserve-${{ matrix.component }}:sha-${{ github.sha }}

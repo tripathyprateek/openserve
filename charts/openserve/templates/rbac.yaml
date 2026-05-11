@@ -1,0 +1,93 @@
+---
+# ServiceAccount for the operator
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "openserve.serviceAccountName" . }}-operator
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: operator
+  annotations:
+    # Workload Identity: bind this SA to a GCP service account that has:
+    # - roles/bigquery.dataViewer (usage data)
+    # - roles/secretmanager.secretAccessor (runtime secrets)
+    # - roles/storage.objectViewer (model cache bucket)
+    iam.gke.io/gcp-service-account: openserve-operator@{{ .Values.billing.gcpProject | default "YOUR_GCP_PROJECT" }}.iam.gserviceaccount.com
+---
+# ClusterRole for the operator (watches across all namespaces for CRDs)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "openserve.fullname" . }}-operator
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: operator
+rules:
+  # CRD management
+  - apiGroups: ["openserve.io"]
+    resources: ["modeldeployments", "apikeys", "budgetpolicies"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["openserve.io"]
+    resources: ["modeldeployments/status", "apikeys/status", "budgetpolicies/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: ["openserve.io"]
+    resources: ["modeldeployments/finalizers", "apikeys/finalizers", "budgetpolicies/finalizers"]
+    verbs: ["update"]
+  # Inference workload management
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["services", "configmaps", "events"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # HPA
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # KEDA ScaledObjects
+  - apiGroups: ["keda.sh"]
+    resources: ["scaledobjects"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Leader election
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "openserve.fullname" . }}-operator
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "openserve.fullname" . }}-operator
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "openserve.serviceAccountName" . }}-operator
+    namespace: {{ .Release.Namespace }}
+---
+# ServiceAccount for the control API
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "openserve.serviceAccountName" . }}-control-api
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: control-api
+  annotations:
+    iam.gke.io/gcp-service-account: openserve-control-api@{{ .Values.billing.gcpProject | default "YOUR_GCP_PROJECT" }}.iam.gserviceaccount.com
+---
+# ServiceAccount for the gateway
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "openserve.serviceAccountName" . }}-gateway
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway

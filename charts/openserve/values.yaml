@@ -1,0 +1,160 @@
+# openserve Helm values
+# All required values are documented here. Pass overrides with --set or a values file.
+
+# -- (Required) Domain under which the GUI and inference endpoints are served.
+# Example: ai.acme.com
+# The GUI is served at https://<domain>
+# Inference endpoints: https://<domain>/inference/<model-id>/v1/...
+domain: ""
+
+# -- Google OIDC / Workspace settings for user authentication.
+google:
+  # -- (Required) OAuth 2.0 Client ID from GCP Console (Credentials → OAuth 2.0 Client IDs).
+  clientId: ""
+  # -- Google Workspace hosted domain to restrict login to (e.g. "acme.com").
+  # Leave empty to allow any Google account (not recommended for production).
+  hostedDomain: ""
+
+# -- Postgres (Cloud SQL) connection settings.
+postgres:
+  # -- Private IP of the Cloud SQL instance.
+  host: ""
+  port: 5432
+  database: openserve
+  # -- Name of the Kubernetes Secret containing 'username' and 'password' keys.
+  # Create it before installing: kubectl create secret generic openserve-postgres \
+  #   --from-literal=username=openserve --from-literal=password=<password>
+  secret: openserve-postgres
+
+# -- Redis (Memorystore) connection settings.
+redis:
+  host: ""
+  port: 6379
+  # -- Optional: secret name containing 'auth-token' key for Redis AUTH.
+  secret: ""
+
+# -- GCS bucket for caching model weights (CMEK-encrypted, created by Terraform prereqs).
+gcs:
+  bucket: ""
+
+# -- BigQuery dataset for token usage metering.
+billing:
+  bigqueryDataset: openserve_usage
+  # -- GCP project ID where the BigQuery dataset lives (defaults to the cluster's project).
+  gcpProject: ""
+
+# -- Operator configuration.
+operator:
+  image:
+    repository: ghcr.io/openserve/openserve-operator
+    tag: ""  # defaults to .Chart.AppVersion
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  # -- Log level: debug, info, warn, error
+  logLevel: info
+
+# -- Control API configuration.
+controlApi:
+  image:
+    repository: ghcr.io/openserve/openserve-control-api
+    tag: ""
+    pullPolicy: IfNotPresent
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  # -- JWT signing secret name (key: 'signing-key', a 32+ byte random string).
+  jwtSecret: openserve-jwt-secret
+
+# -- Gateway (Go reverse proxy) configuration.
+gateway:
+  image:
+    repository: ghcr.io/openserve/openserve-gateway
+    tag: ""
+    pullPolicy: IfNotPresent
+  replicas: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 128Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+# -- GUI configuration.
+gui:
+  image:
+    repository: ghcr.io/openserve/openserve-gui
+    tag: ""
+    pullPolicy: IfNotPresent
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# -- TLS / ingress configuration.
+ingress:
+  # -- Ingress class name. "gce" for GKE managed certificates; "nginx" for nginx-ingress.
+  className: gce
+  # -- Annotations to add to the Ingress resource.
+  annotations:
+    kubernetes.io/ingress.allow-http: "false"
+    networking.gke.io/managed-certificates: openserve-tls
+
+# -- Cloud Armor security policy name (pre-created in GCP).
+# Set to empty string to disable Cloud Armor.
+cloudArmor:
+  securityPolicy: ""
+
+# -- cert-manager: set to true to install cert-manager as a subchart.
+certManager:
+  install: false  # set true if cert-manager is not already in the cluster
+
+# -- KEDA: set to true to install KEDA as a subchart.
+keda:
+  install: false  # set true if KEDA is not already in the cluster
+
+# -- Catalog registry URL. Only change if running an air-gapped mirror.
+catalog:
+  url: https://catalog.openserve.io
+
+# -- Namespace where inference workloads (vLLM pods) run.
+# Kept separate from the openserve-system namespace for NetworkPolicy isolation.
+inferenceNamespace: openserve-inference
+
+# -- Default GPU node pool configuration for inference workloads.
+gpuNodePools:
+  l4:
+    # -- GKE GPU accelerator label value for L4 nodes.
+    accelerator: nvidia-l4
+    # -- Spot instances reduce cost by ~60% at the risk of eviction.
+    # Enable for development; disable for production.
+    spot: true
+  a100_40g:
+    accelerator: nvidia-tesla-a100
+    spot: false
+
+# -- Alert configuration for budget and anomaly notifications.
+alerts:
+  # -- SMTP relay for email alerts (uses Google SMTP by default on GCP).
+  smtp:
+    host: smtp.gmail.com
+    port: 587
+    # -- Secret name containing 'username' and 'password' keys.
+    secret: openserve-smtp-secret
+  # -- Webhook URL for Slack or PagerDuty alerts. Leave empty to disable.
+  webhookUrl: ""

@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openserve-gateway-routes
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+data:
+  routing.yaml: |
+    # Managed by openserve-operator. Do not edit manually.
+    routes: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openserve-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "openserve.labels" . | nindent 4 }}
+data:
+  DOMAIN: {{ .Values.domain | quote }}
+  CATALOG_URL: {{ .Values.catalog.url | quote }}
+  GCS_BUCKET: {{ .Values.gcs.bucket | quote }}
+  BQ_DATASET: {{ .Values.billing.bigqueryDataset | quote }}
+  INFERENCE_NAMESPACE: {{ .Values.inferenceNamespace | quote }}

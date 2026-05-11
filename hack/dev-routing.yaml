@@ -1,0 +1,12 @@
+# Dev routing config — points at the mock-vllm container.
+# The operator writes this file in production; here it's a static stub.
+#
+# routes: service-VIP routing (used when MaxReplicas==1 or no pod IPs yet)
+# podRoutes: pod-level routing for prefix-cache-aware consistent hashing
+#            (used by gateway.PrefixResolve when multiple pods are available)
+routes:
+  llama-3-8b-instruct: "mock-vllm:8000"
+
+podRoutes:
+  llama-3-8b-instruct:
+    - "mock-vllm:8000"

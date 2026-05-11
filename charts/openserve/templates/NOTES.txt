@@ -1,0 +1,38 @@
+openserve {{ .Chart.Version }} has been installed.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  GUI:  https://{{ .Values.domain }}
+  API:  https://{{ .Values.domain }}/api/v1
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Next steps:
+
+1. Browse to https://{{ .Values.domain }} and sign in with your
+   Google Workspace account to complete the setup wizard.
+
+2. Deploy your first model from the Catalog tab
+   (Llama 3 8B Instruct is a good starting point on an L4 GPU).
+
+3. Generate an API key in Members & Keys and test inference:
+
+   curl https://{{ .Values.domain }}/inference/<model-id>/v1/chat/completions \
+     -H "Authorization: Bearer openserve_live_<your-key>" \
+     -H "Content-Type: application/json" \
+     -d '{"model":"<model-id>","messages":[{"role":"user","content":"Hello!"}]}'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Operator status:
+  kubectl get modeldeployments -A
+  kubectl get apikeys -A
+  kubectl get budgetpolicies -A
+
+Logs:
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/component=operator -f
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/component=gateway -f
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Docs: https://docs.openserve.io
+Bugs: https://github.com/openserve/openserve/issues
